@@ -119,7 +119,7 @@
     .set(&#39;Content-Type&#39;, &#39;application/json&#39;)
     .send(&#39;{&quot;name&quot;:&quot;tj&quot;,&quot;pet&quot;:&quot;tobi&quot;}&#39;)
     .end(callback)
-</code></pre><p>Since JSON is undoubtably the most common, it&#39;s the <em>default</em>! The following example is equivalent to the previous.</p>
+</code></pre><p>Since JSON is undoubtedly the most common, it&#39;s the <em>default</em>! The following example is equivalent to the previous.</p>
 <pre><code>  request.post(&#39;/user&#39;)
     .send({ name: &#39;tj&#39;, pet: &#39;tobi&#39; })
     .end(callback)
@@ -139,6 +139,10 @@
     .type(&#39;form&#39;)
     .send({ name: &#39;tj&#39; })
     .send({ pet: &#39;tobi&#39; })
+    .end(callback)
+</code></pre><p>Sending a <a href="https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData"><code>FormData</code></a> object is also supported. The following example will <strong>POST</strong> the content of the HTML form identified by id=&quot;myForm&quot;:</p>
+<pre><code>  request.post(&#39;/user&#39;)
+    .send(new FormData(document.getElementById(&#39;myForm&#39;)))
     .end(callback)
 </code></pre><h2 id="setting-the-content-type-">Setting the <code>Content-Type</code></h2>
 <p>The obvious solution is to use the <code>.set()</code> method:</p>
