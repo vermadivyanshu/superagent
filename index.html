@@ -356,16 +356,23 @@ const req = request.get(&#39;/some.json&#39;);
 req.pipe(stream);
 </code></pre><h2 id="multipart-requests">Multipart requests</h2>
 <p>SuperAgent is also great for <em>building</em> multipart requests for which it provides methods <code>.attach()</code> and <code>.field()</code>.</p>
+<p>When you use <code>.field()</code> or <code>.attach()</code> you can&#39;t use <code>.send()</code> and you <em>must not</em> set <code>Content-Type</code> (the correct type will be set for you).</p>
 <h3 id="attaching-files">Attaching files</h3>
-<p>As mentioned a higher-level API is also provided, in the form of <code>.attach(name, [path], [filename])</code> and <code>.field(name, value)</code>/<code>.field(object)</code>. Attaching several files is simple, you can also provide a custom filename for the attachment, otherwise the basename of the attached file is used.</p>
-<pre><code>request
-  .post(&#39;/upload&#39;)
-  .attach(&#39;avatar&#39;, &#39;path/to/tobi.png&#39;, &#39;user.png&#39;)
-  .attach(&#39;image&#39;, &#39;path/to/loki.png&#39;)
-  .attach(&#39;file&#39;, &#39;path/to/jane.png&#39;)
-  .end(callback);
-</code></pre><h3 id="field-values">Field values</h3>
-<p>Much like form fields in HTML, you can set field values with the <code>.field(name, value)</code> method. Suppose you want to upload a few images with your name and email, your request might look something like this:</p>
+<p>To send a file use <code>.attach(name, [file], [options])</code>. You can attach multiple files by calling <code>.attach</code> multiple times. The arguments are:</p>
+<ul>
+<li><code>name</code> — filed name in the form.</li>
+<li><code>file</code> — either string with file path or <code>Blob</code>/<code>Buffer</code> object.</li>
+<li><p><code>options</code> — (optional) either string with custom file name or <code>{filename: string}</code> object. In Node also <code>{contentType: &#39;&#39;}</code> is supported. In browser create a <code>Blob</code> with an appropriate type instead.</p>
+<p> request
+   .post(&#39;/upload&#39;)
+   .attach(&#39;image1&#39;, &#39;path/to/felix.jpeg&#39;)
+   .attach(&#39;image2&#39;, imageBuffer, &#39;luna.jpeg&#39;)
+   .field(&#39;caption&#39;, &#39;My cats&#39;)
+   .end(callback);</p>
+</li>
+</ul>
+<h3 id="field-values">Field values</h3>
+<p>Much like form fields in HTML, you can set field values with <code>.field(name, value)</code> and <code>.field({name: value})</code>. Suppose you want to upload a few images with your name and email, your request might look something like this:</p>
 <pre><code> request
    .post(&#39;/upload&#39;)
    .field(&#39;user[name]&#39;, &#39;Tobi&#39;)

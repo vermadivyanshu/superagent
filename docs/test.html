@@ -190,15 +190,20 @@ return request
         <section class="suite">
           <h1>set headers</h1>
           <dl>
-            <dt class="error">should only set headers for ownProperties of header</dt>
-            <dd class="error"><pre><code>try {
+            <dt>should only set headers for ownProperties of header</dt>
+            <dd><pre><code>try {
   request
-    .get(uri + '/echo')
-    .end(done);
+    .get(uri + '/echo-headers')
+    .set('valid', 'ok')
+    .end(function(err, res){
+      if (!err &amp;&amp; res.body &amp;&amp; res.body.valid &amp;&amp; !res.body.hasOwnProperty('invalid')) {
+        return done();
+      }
+      done(err || Error(&quot;fail&quot;));
+    });
 } catch (e) {
   done(e)
 }</code></pre></dd>
-            <dd class="error">Error: socket hang up</dd>
           </dl>
         </section>
         <section class="suite">
