@@ -362,16 +362,16 @@ req.pipe(stream);
 <ul>
 <li><code>name</code> — filed name in the form.</li>
 <li><code>file</code> — either string with file path or <code>Blob</code>/<code>Buffer</code> object.</li>
-<li><p><code>options</code> — (optional) either string with custom file name or <code>{filename: string}</code> object. In Node also <code>{contentType: &#39;&#39;}</code> is supported. In browser create a <code>Blob</code> with an appropriate type instead.</p>
-<p> request
-   .post(&#39;/upload&#39;)
-   .attach(&#39;image1&#39;, &#39;path/to/felix.jpeg&#39;)
-   .attach(&#39;image2&#39;, imageBuffer, &#39;luna.jpeg&#39;)
-   .field(&#39;caption&#39;, &#39;My cats&#39;)
-   .end(callback);</p>
-</li>
+<li><code>options</code> — (optional) either string with custom file name or <code>{filename: string}</code> object. In Node also <code>{contentType: &#39;mime/type&#39;}</code> is supported. In browser create a <code>Blob</code> with an appropriate type instead.</li>
 </ul>
-<h3 id="field-values">Field values</h3>
+<p><br></p>
+<pre><code>request
+  .post(&#39;/upload&#39;)
+  .attach(&#39;image1&#39;, &#39;path/to/felix.jpeg&#39;)
+  .attach(&#39;image2&#39;, imageBuffer, &#39;luna.jpeg&#39;)
+  .field(&#39;caption&#39;, &#39;My cats&#39;)
+  .end(callback);
+</code></pre><h3 id="field-values">Field values</h3>
 <p>Much like form fields in HTML, you can set field values with <code>.field(name, value)</code> and <code>.field({name: value})</code>. Suppose you want to upload a few images with your name and email, your request might look something like this:</p>
 <pre><code> request
    .post(&#39;/upload&#39;)
