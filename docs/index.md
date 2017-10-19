@@ -467,6 +467,8 @@ The Node client allows you to pipe data to and from the request. For example pip
     const req = request.post('/somewhere');
     req.type('json');
     stream.pipe(req);
+    
+Note that when you pipe to a request, superagent sends the piped data with [chunked transfer encoding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding), which isn't supported by all servers (for instance, Python WSGI servers).
 
 Or piping the response to a file:
 
@@ -554,7 +556,7 @@ An "error" event is also emitted, with you can listen for:
 
       });
 
-Note that a 4xx or 5xx response with super agent **are** considered an error by default. For example if you get a 500 or 403 response, this status information will be available via `err.status`. Errors from such responses also contain an `err.response` field with all of the properties mentioned in "[Response properties](#response-properties)". The library behaves in this way to handle the common case of wanting success responses and treating HTTP error status codes as errors while still allowing for custom logic around specific error conditions.
+Note that **superagent considers 4xx and 5xx responses (as well as unhandled 3xx responses) errors by default**. For example, if you get a `304 Not modified`, `403 Forbidden` or `500 Internal server error` response, this status information will be available via `err.status`. Errors from such responses also contain an `err.response` field with all of the properties mentioned in "[Response properties](#response-properties)". The library behaves in this way to handle the common case of wanting success responses and treating HTTP error status codes as errors while still allowing for custom logic around specific error conditions.
 
 Network failures, timeouts, and other errors that produce no response will contain no `err.status` or `err.response` fields.
 

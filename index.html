@@ -350,7 +350,8 @@ const stream = fs.createReadStream(&#39;path/to/my.json&#39;);
 const req = request.post(&#39;/somewhere&#39;);
 req.type(&#39;json&#39;);
 stream.pipe(req);
-</code></pre><p>Or piping the response to a file:</p>
+</code></pre><p>Note that when you pipe to a request, superagent sends the piped data with <a href="https://en.wikipedia.org/wiki/Chunked_transfer_encoding">chunked transfer encoding</a>, which isn&#39;t supported by all servers (for instance, Python WSGI servers).</p>
+<p>Or piping the response to a file:</p>
 <pre><code>const stream = fs.createWriteStream(&#39;path/to/my.json&#39;);
 const req = request.get(&#39;/some.json&#39;);
 req.pipe(stream);
@@ -411,7 +412,7 @@ req.pipe(stream);
   .end(function(err, res){
 
   });
-</code></pre><p>Note that a 4xx or 5xx response with super agent <strong>are</strong> considered an error by default. For example if you get a 500 or 403 response, this status information will be available via <code>err.status</code>. Errors from such responses also contain an <code>err.response</code> field with all of the properties mentioned in &quot;<a href="#response-properties">Response properties</a>&quot;. The library behaves in this way to handle the common case of wanting success responses and treating HTTP error status codes as errors while still allowing for custom logic around specific error conditions.</p>
+</code></pre><p>Note that <strong>superagent considers 4xx and 5xx responses (as well as unhandled 3xx responses) errors by default</strong>. For example, if you get a <code>304 Not modified</code>, <code>403 Forbidden</code> or <code>500 Internal server error</code> response, this status information will be available via <code>err.status</code>. Errors from such responses also contain an <code>err.response</code> field with all of the properties mentioned in &quot;<a href="#response-properties">Response properties</a>&quot;. The library behaves in this way to handle the common case of wanting success responses and treating HTTP error status codes as errors while still allowing for custom logic around specific error conditions.</p>
 <p>Network failures, timeouts, and other errors that produce no response will contain no <code>err.status</code> or <code>err.response</code> fields.</p>
 <p>If you wish to handle 404 or other HTTP error responses, you can query the <code>err.status</code> property. When an HTTP error occurs (4xx or 5xx response) the <code>res.error</code> property is an <code>Error</code> object, this allows you to perform checks such as:</p>
 <pre><code>if (err &amp;&amp; err.status === 404) {

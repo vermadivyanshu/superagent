@@ -1,35 +1,32 @@
-
-var request = require('../..')
-  , express = require('express')
-  , assert = require('assert')
-  , net = require('net');
+"use strict";
+const request = require("../.."),
+  express = require("express"),
+  assert = require("assert"),
+  net = require("net");
 
 function getFreePort(fn) {
-  var server = net.createServer();
-  server.listen(0, function(){
-    var port = server.address().port;
-    server.close(function(){
+  const server = net.createServer();
+  server.listen(0, () => {
+    const port = server.address().port;
+    server.close(() => {
       fn(port);
     });
   });
-};
+}
 
-describe('with network error', function(){
-  before(function(done){
-    var self = this;
+describe("with network error", () => {
+  before(function(done) {
     // connecting to a free port
     // will trigger a connection refused
-    getFreePort(function(port){
-      self.port = port;
+    getFreePort(port => {
+      this.port = port;
       done();
     });
   });
 
-  it('should error', function(done) {
-    request
-    .get('http://localhost:' + this.port + '/')
-    .end(function(err, res){
-      assert(err, 'expected an error');
+  it("should error", function(done) {
+    request.get(`http://localhost:${this.port}/`).end((err, res) => {
+      assert(err, "expected an error");
       done();
     });
   });
