@@ -10,6 +10,38 @@
     <ul id="menu"></ul>
     <div id="content">
     <section class="suite">
+      <h1>Agent</h1>
+      <dl>
+        <dt>should remember defaults</dt>
+        <dd><pre><code>if (&#x27;undefined&#x27; === typeof Promise) {
+  return;
+}
+var called = 0;
+var event_called = 0;
+var agent = request.agent()
+  .accept(&#x27;json&#x27;)
+  .use(function() {called++})
+  .once(&#x27;request&#x27;, function() {event_called++})
+  .query({hello:&#x22;world&#x22;})
+  .set(&#x22;X-test&#x22;, &#x22;testing&#x22;);
+assert.equal(0, called);
+assert.equal(0, event_called);
+return agent.get(base + &#x27;/echo&#x27;)
+.then(function(res) {
+  assert.equal(1, called);
+  assert.equal(1, event_called);
+  assert.equal(&#x27;application/json&#x27;, res.headers.accept);
+  assert.equal(&#x27;testing&#x27;, res.headers[&#x27;x-test&#x27;]);
+  return agent.get(base + &#x27;/querystring&#x27;);
+})
+.then(function(res) {
+  assert.equal(2, called);
+  assert.equal(2, event_called);
+  assert.deepEqual({hello:&#x22;world&#x22;}, res.body);
+});</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
       <h1>request</h1>
       <dl>
         <section class="suite">
@@ -1239,7 +1271,7 @@ next();</code></pre></dd>
   } catch(e) { next(e); }
 });</code></pre></dd>
         <dt>delete()</dt>
-        <dd><pre><code>request.delete(uri + &#x27;/user/12&#x27;).end(function(err, res){
+        <dd><pre><code>request[&#x27;delete&#x27;](uri + &#x27;/user/12&#x27;).end(function(err, res){
   try {
   assert.equal(&#x27;deleted&#x27;, res.text, &#x27;response text&#x27;);
   next();
@@ -1500,6 +1532,17 @@ try {
 .end(function(err, res){
   try {
   assert.deepEqual(res.body, [&#x27;tobi&#x27;, &#x27;loki&#x27;, &#x27;jane&#x27;]);
+  next();
+  } catch(e) { next(e); }
+});</code></pre></dd>
+        <dt>GET json-seq</dt>
+        <dd><pre><code>request
+.get(uri + &#x27;/json-seq&#x27;)
+.buffer()
+.end(function(err, res){
+  try{
+  assert.ifError(err);
+  assert.deepEqual(res.text, &#x27;\x1e{&#x22;id&#x22;:1}\n\x1e{&#x22;id&#x22;:2}\n&#x27;);
   next();
   } catch(e) { next(e); }
 });</code></pre></dd>
@@ -1912,6 +1955,25 @@ setTimeout(function() {
   assert.equal(0, err.retries, &#x27;expected an error with 0 .retries&#x27;);
   assert.equal(400, err.status, &#x27;expected an error status of 400&#x27;);
   done();
+  } catch(err) {
+    done(err);
+  }
+});</code></pre></dd>
+        <dt>should execute callback on retry if passed</dt>
+        <dd><pre><code>var callbackCallCount = 0;
+function retryCallback(request) {
+  callbackCallCount++;
+}
+request
+.get(base + &#x27;/error&#x27;)
+.retry(2, retryCallback)
+.end(function(err, res){
+  try {
+    assert(err, &#x27;expected an error&#x27;);
+    assert.equal(2, err.retries, &#x27;expected an error with .retries&#x27;);
+    assert.equal(500, err.status, &#x27;expected an error status of 500&#x27;);
+    assert.equal(2, callbackCallCount, &#x27;expected the callback to be called on each retry&#x27;);
+    done();
   } catch(err) {
     done(err);
   }

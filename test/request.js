@@ -197,7 +197,7 @@ it('del()', function(next){
 });
 
 it('delete()', function(next){
-  request.delete(uri + '/user/12').end(function(err, res){
+  request['delete'](uri + '/user/12').end(function(err, res){
     try {
     assert.equal('deleted', res.text, 'response text');
     next();
@@ -513,6 +513,19 @@ it('GET json', function(next){
   .end(function(err, res){
     try {
     assert.deepEqual(res.body, ['tobi', 'loki', 'jane']);
+    next();
+    } catch(e) { next(e); }
+  });
+});
+
+it('GET json-seq', function(next){
+  request
+  .get(uri + '/json-seq')
+  .buffer()
+  .end(function(err, res){
+    try{
+    assert.ifError(err);
+    assert.deepEqual(res.text, '\x1e{"id":1}\n\x1e{"id":2}\n');
     next();
     } catch(e) { next(e); }
   });

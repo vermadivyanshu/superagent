@@ -162,12 +162,14 @@ simply the extension name such as &quot;xml&quot;, &quot;json&quot;, &quot;png&q
 </code></pre><h2 id="serializing-request-body">Serializing request body</h2>
 <p>SuperAgent will automatically serialize JSON and forms. If you want to send the payload in a custom format, you can replace the built-in serialization with <code>.serialize()</code> method.</p>
 <h2 id="retrying-requests">Retrying requests</h2>
-<p>When given the <code>.retry()</code> method, SuperAgent will automatically retry requests, if they fail in a way that is transient or could be due to a flaky Internet connection. <code>.retry()</code> takes an optional argument which is the maximum number of times to retry failed requests; the default is 3 times.</p>
+<p>When given the <code>.retry()</code> method, SuperAgent will automatically retry requests, if they fail in a way that is transient or could be due to a flaky Internet connection.</p>
+<p>This method has two optional arguments: number of retries (default 3) and a callback. It calls <code>callback(err, res)</code> before each retry. The callback may return <code>true</code>/<code>false</code> to control whether the request sould be retried (but the maximum number of retries is always applied).</p>
 <pre><code> request
    .get(&#39;http://example.com/search&#39;)
    .retry(2)
    .end(callback);
-</code></pre><h2 id="setting-accept">Setting Accept</h2>
+</code></pre><p>Use <code>.retry()</code> only with requests that are <em>idempotent</em> (i.e. multiple requests reaching the server won&#39;t cause undesirable side effects like duplicate purchases).</p>
+<h2 id="setting-accept">Setting Accept</h2>
 <p>In a similar fashion to the <code>.type()</code> method it is also possible to set the <code>Accept</code> header via the short hand method <code>.accept()</code>. Which references <code>request.types</code> as well allowing you to specify either the full canonicalized MIME type name as <code>type/subtype</code>, or the extension suffix form as &quot;xml&quot;, &quot;json&quot;, &quot;png&quot;, etc. for convenience:</p>
 <pre><code> request.get(&#39;/user&#39;)
    .accept(&#39;application/json&#39;)
@@ -332,7 +334,8 @@ Tobi
   .get(&#39;/some.png&#39;)
   .redirects(2)
   .end(callback);
-</code></pre><h2 id="preserving-cookies">Preserving cookies</h2>
+</code></pre><h2 id="agents-for-global-state">Agents for global state</h2>
+<h3 id="saving-cookies">Saving cookies</h3>
 <p>In Node SuperAgent does not save cookies by default, but you can use the <code>.agent()</code> method to create a copy of SuperAgent that saves cookies. Each copy has a separate cookie jar.</p>
 <pre><code>const agent = request.agent();
 agent
@@ -340,8 +343,16 @@ agent
   .then(() =&gt; {
     return agent.get(&#39;/cookied-page&#39;);
   });
-</code></pre><p>In browsers cookies are managed automatically by the browser, and there is no <code>.agent()</code> method.</p>
-<h2 id="piping-data">Piping data</h2>
+</code></pre><p>In browsers cookies are managed automatically by the browser, so the <code>.agent()</code> does not isolate cookies.</p>
+<h3 id="default-options-for-multiple-requests">Default options for multiple requests</h3>
+<p>Regular request methods (<code>.use()</code>, <code>.set()</code>, <code>.auth()</code>) called on the agent will be used as defaults for all requests made by that agent.</p>
+<pre><code>const agent = request.agent()
+  .use(plugin)
+  .auth(shared);
+
+await agent.get(&#39;/with-plugin-and-auth&#39;);
+await agent.get(&#39;/also-with-plugin-and-auth&#39;);
+</code></pre><h2 id="piping-data">Piping data</h2>
 <p>The Node client allows you to pipe data to and from the request. For example piping a file&#39;s contents as the request:</p>
 <pre><code>const request = require(&#39;superagent&#39;);
 const fs = require(&#39;fs&#39;);
@@ -355,7 +366,20 @@ stream.pipe(req);
 <pre><code>const stream = fs.createWriteStream(&#39;path/to/my.json&#39;);
 const req = request.get(&#39;/some.json&#39;);
 req.pipe(stream);
-</code></pre><h2 id="multipart-requests">Multipart requests</h2>
+</code></pre><p>Note that you should <strong>NOT</strong> attempt to pipe the result of <code>.end()</code> or the <code>Response</code> object:</p>
+<pre><code>// Don&#39;t do either of these:
+const stream = getAWritableStream();
+const req = request
+  .get(&#39;/some.json&#39;)
+  // this pipes garbage to the stream and fails in unexpected ways
+  .end((err, response) =&gt; response.pipe(stream))
+const req = request
+  .get(&#39;/some.json&#39;)
+  .end()
+  // this is also unsupported, .pipe calls .end for you.
+  .pipe(stream);
+</code></pre><p>In a <a href="https://github.com/visionmedia/superagent/issues/1188">future version</a> of superagent, improper calls to <code>pipe()</code> will fail.</p>
+<h2 id="multipart-requests">Multipart requests</h2>
 <p>SuperAgent is also great for <em>building</em> multipart requests for which it provides methods <code>.attach()</code> and <code>.field()</code>.</p>
 <p>When you use <code>.field()</code> or <code>.attach()</code> you can&#39;t use <code>.send()</code> and you <em>must not</em> set <code>Content-Type</code> (the correct type will be set for you).</p>
 <h3 id="attaching-files">Attaching files</h3>
