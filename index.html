@@ -16,30 +16,31 @@
    .send({ name: &#39;Manny&#39;, species: &#39;cat&#39; })
    .set(&#39;X-API-Key&#39;, &#39;foobar&#39;)
    .set(&#39;Accept&#39;, &#39;application/json&#39;)
-   .end(function(err, res){
-     if (err || !res.ok) {
-       alert(&#39;Oh no! error&#39;);
-     } else {
-       alert(&#39;yay got &#39; + JSON.stringify(res.body));
-     }
+   .then(function(res) {
+      alert(&#39;yay got &#39; + JSON.stringify(res.body));
    });
 </code></pre><h2 id="test-documentation">Test documentation</h2>
 <p>The following <a href="docs/test.html">test documentation</a> was generated with <a href="http://mochajs.org/">Mocha&#39;s</a> &quot;doc&quot; reporter, and directly reflects the test suite. This provides an additional source of documentation.</p>
 <h2 id="request-basics">Request basics</h2>
-<p>A request can be initiated by invoking the appropriate method on the <code>request</code> object, then calling <code>.end()</code> to send the request. For example a simple <strong>GET</strong> request:</p>
+<p>A request can be initiated by invoking the appropriate method on the <code>request</code> object, then calling <code>.then()</code> (or <code>.end()</code> <a href="#promise-and-generator-support">or <code>await</code></a>) to send the request. For example a simple <strong>GET</strong> request:</p>
 <pre><code> request
    .get(&#39;/search&#39;)
-   .end(function(err, res){
-
+   .then(function(res) {
+      // res.body, res.headers, res.status
+   })
+   .catch(function(err) {
+      // err.message, err.response
    });
-</code></pre><p>A method string may also be passed:</p>
-<pre><code>request(&#39;GET&#39;, &#39;/search&#39;).end(callback);
-</code></pre><p>ES6 promises are supported. <em>Instead</em> of <code>.end()</code> you can call <code>.then()</code>:</p>
+</code></pre><p>HTTP method may also be passed as a string:</p>
 <pre><code>request(&#39;GET&#39;, &#39;/search&#39;).then(success, failure);
-</code></pre><p>The <strong>Node</strong> client may also provide absolute URLs. In browsers absolute URLs won&#39;t work unless the server implements <a href="#cors">CORS</a>.</p>
+</code></pre><p>Old-style callbacks are also supported. <em>Instead of</em> <code>.then()</code> you can call <code>.end()</code>:</p>
+<pre><code>request(&#39;GET&#39;, &#39;/search&#39;).end(function(err, res){
+  if (res.ok) {}
+});
+</code></pre><p>Absolute URLs can be used. In web browsers absolute URLs work only if the server implements <a href="#cors">CORS</a>.</p>
 <pre><code> request
    .get(&#39;http://example.com/search&#39;)
-   .end(function(err, res){
+   .then(function(res) {
 
    });
 </code></pre><p>The <strong>Node</strong> client supports making requests to <a href="http://en.wikipedia.org/wiki/Unix_domain_socket">Unix Domain Sockets</a>:</p>
@@ -47,17 +48,17 @@
  //          Use `%2F` as `/` in SOCKET_PATH
  request
    .get(&#39;http+unix://%2Fabsolute%2Fpath%2Fto%2Funix.sock/search&#39;)
-   .end(function(err, res){
+   .then(res =&gt; {
 
    });
 </code></pre><p><strong>DELETE</strong>, <strong>HEAD</strong>, <strong>PATCH</strong>, <strong>POST</strong>, and <strong>PUT</strong> requests can also be used, simply change the method name:</p>
 <pre><code>request
   .head(&#39;/favicon.ico&#39;)
-  .end(function(err, res){
+  .then(function(res) {
 
   });
 </code></pre><p><strong>DELETE</strong> can be also called as <code>.del()</code> for compatibility with old IE where <code>delete</code> is a reserved word.</p>
-<p>  The HTTP method defaults to <strong>GET</strong>, so if you wish, the following is valid:</p>
+<p>The HTTP method defaults to <strong>GET</strong>, so if you wish, the following is valid:</p>
 <pre><code> request(&#39;/search&#39;, function(err, res){
 
  });
@@ -67,12 +68,12 @@
    .get(&#39;/search&#39;)
    .set(&#39;API-Key&#39;, &#39;foobar&#39;)
    .set(&#39;Accept&#39;, &#39;application/json&#39;)
-   .end(callback);
+   .then(callback);
 </code></pre><p>You may also pass an object to set several fields in a single call:</p>
 <pre><code> request
    .get(&#39;/search&#39;)
    .set({ &#39;API-Key&#39;: &#39;foobar&#39;, Accept: &#39;application/json&#39; })
-   .end(callback);
+   .then(callback);
 </code></pre><h2 id="-get-requests"><code>GET</code> requests</h2>
 <p>The <code>.query()</code> method accepts objects, which when used with the <strong>GET</strong> method will form a query-string. The following will produce the path <code>/search?query=Manny&amp;range=1..5&amp;order=desc</code>.</p>
 <pre><code> request
@@ -80,21 +81,21 @@
    .query({ query: &#39;Manny&#39; })
    .query({ range: &#39;1..5&#39; })
    .query({ order: &#39;desc&#39; })
-   .end(function(err, res){
+   .then(function(res) {
 
    });
 </code></pre><p>Or as a single object:</p>
 <pre><code>request
   .get(&#39;/search&#39;)
   .query({ query: &#39;Manny&#39;, range: &#39;1..5&#39;, order: &#39;desc&#39; })
-  .end(function(err, res){
+  .then(function(res) {
 
   });
 </code></pre><p>The <code>.query()</code> method accepts strings as well:</p>
 <pre><code>  request
     .get(&#39;/querystring&#39;)
     .query(&#39;search=Manny&amp;range=1..5&#39;)
-    .end(function(err, res){
+    .then(function(res) {
 
     });
 </code></pre><p>Or joined:</p>
@@ -102,7 +103,7 @@
     .get(&#39;/querystring&#39;)
     .query(&#39;search=Manny&#39;)
     .query(&#39;range=1..5&#39;)
-    .end(function(err, res){
+    .then(function(res) {
 
     });
 </code></pre><h2 id="-head-requests"><code>HEAD</code> requests</h2>
@@ -110,7 +111,7 @@
 <pre><code>  request
     .head(&#39;/users&#39;)
     .query({ email: &#39;joe@smith.com&#39; })
-    .end(function(err, res){
+    .then(function(res) {
 
     });
 </code></pre><h2 id="-post-put-requests"><code>POST</code> / <code>PUT</code> requests</h2>
@@ -118,32 +119,32 @@
 <pre><code>  request.post(&#39;/user&#39;)
     .set(&#39;Content-Type&#39;, &#39;application/json&#39;)
     .send(&#39;{&quot;name&quot;:&quot;tj&quot;,&quot;pet&quot;:&quot;tobi&quot;}&#39;)
-    .end(callback)
+    .then(callback)
 </code></pre><p>Since JSON is undoubtedly the most common, it&#39;s the <em>default</em>! The following example is equivalent to the previous.</p>
 <pre><code>  request.post(&#39;/user&#39;)
     .send({ name: &#39;tj&#39;, pet: &#39;tobi&#39; })
-    .end(callback)
+    .then(callback)
 </code></pre><p>Or using multiple <code>.send()</code> calls:</p>
 <pre><code>  request.post(&#39;/user&#39;)
     .send({ name: &#39;tj&#39; })
     .send({ pet: &#39;tobi&#39; })
-    .end(callback)
+    .then(callback)
 </code></pre><p>By default sending strings will set the <code>Content-Type</code> to <code>application/x-www-form-urlencoded</code>,
   multiple calls will be concatenated with <code>&amp;</code>, here resulting in <code>name=tj&amp;pet=tobi</code>:</p>
 <pre><code>  request.post(&#39;/user&#39;)
     .send(&#39;name=tj&#39;)
     .send(&#39;pet=tobi&#39;)
-    .end(callback);
+    .then(callback);
 </code></pre><p>SuperAgent formats are extensible, however by default &quot;json&quot; and &quot;form&quot; are supported. To send the data as <code>application/x-www-form-urlencoded</code> simply invoke <code>.type()</code> with &quot;form&quot;, where the default is &quot;json&quot;. This request will <strong>POST</strong> the body &quot;name=tj&amp;pet=tobi&quot;.</p>
 <pre><code>  request.post(&#39;/user&#39;)
     .type(&#39;form&#39;)
     .send({ name: &#39;tj&#39; })
     .send({ pet: &#39;tobi&#39; })
-    .end(callback)
+    .then(callback)
 </code></pre><p>Sending a <a href="https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData"><code>FormData</code></a> object is also supported. The following example will <strong>POST</strong> the content of the HTML form identified by id=&quot;myForm&quot;:</p>
 <pre><code>  request.post(&#39;/user&#39;)
     .send(new FormData(document.getElementById(&#39;myForm&#39;)))
-    .end(callback)
+    .then(callback)
 </code></pre><h2 id="setting-the-content-type-">Setting the <code>Content-Type</code></h2>
 <p>The obvious solution is to use the <code>.set()</code> method:</p>
 <pre><code> request.post(&#39;/user&#39;)
@@ -166,8 +167,9 @@ simply the extension name such as &quot;xml&quot;, &quot;json&quot;, &quot;png&q
 <p>This method has two optional arguments: number of retries (default 3) and a callback. It calls <code>callback(err, res)</code> before each retry. The callback may return <code>true</code>/<code>false</code> to control whether the request sould be retried (but the maximum number of retries is always applied).</p>
 <pre><code> request
    .get(&#39;http://example.com/search&#39;)
-   .retry(2)
-   .end(callback);
+   .retry(2) // or:
+   .retry(2, callback)
+   .then(finished);
 </code></pre><p>Use <code>.retry()</code> only with requests that are <em>idempotent</em> (i.e. multiple requests reaching the server won&#39;t cause undesirable side effects like duplicate purchases).</p>
 <h2 id="setting-accept">Setting Accept</h2>
 <p>In a similar fashion to the <code>.type()</code> method it is also possible to set the <code>Accept</code> header via the short hand method <code>.accept()</code>. Which references <code>request.types</code> as well allowing you to specify either the full canonicalized MIME type name as <code>type/subtype</code>, or the extension suffix form as &quot;xml&quot;, &quot;json&quot;, &quot;png&quot;, etc. for convenience:</p>
@@ -188,14 +190,14 @@ simply the extension name such as &quot;xml&quot;, &quot;json&quot;, &quot;png&q
   .query({ format: &#39;json&#39; })
   .query({ dest: &#39;/login&#39; })
   .send({ post: &#39;data&#39;, here: &#39;wahoo&#39; })
-  .end(callback);
+  .then(callback);
 </code></pre><p>By default the query string is not assembled in any particular order. An asciibetically-sorted query string can be enabled with <code>req.sortQuery()</code>. You may also provide a custom sorting comparison function with <code>req.sortQuery(myComparisonFn)</code>. The comparison function should take 2 arguments and return a negative/zero/positive integer.</p>
 <pre><code class="lang-js"> // default order
  request.get(&#39;/user&#39;)
    .query(&#39;name=Nick&#39;)
    .query(&#39;search=Manny&#39;)
    .sortQuery()
-   .end(callback)
+   .then(callback)
 
  // customized sort function
  request.get(&#39;/user&#39;)
@@ -204,7 +206,7 @@ simply the extension name such as &quot;xml&quot;, &quot;json&quot;, &quot;png&q
    .sortQuery(function(a, b){
      return a.length - b.length;
    })
-   .end(callback)
+   .then(callback)
 </code></pre>
 <h2 id="tls-options">TLS options</h2>
 <p>In Node.js SuperAgent supports methods to configure HTTPS requests:</p>
@@ -222,14 +224,14 @@ request
   .post(&#39;/client-auth&#39;)
   .key(key)
   .cert(cert)
-  .end(callback);
+  .then(callback);
 </code></pre>
 <pre><code class="lang-js">var ca = fs.readFileSync(&#39;ca.cert.pem&#39;);
 
 request
   .post(&#39;https://localhost/private-ca-server&#39;)
   .ca(ca)
-  .end(callback);
+  .then(res =&gt; {});
 </code></pre>
 <h2 id="parsing-response-bodies">Parsing response bodies</h2>
 <p>SuperAgent will parse known response-body data for you, currently supporting <code>application/x-www-form-urlencoded</code>, <code>application/json</code>, and <code>multipart/form-data</code>.</p>
@@ -314,7 +316,7 @@ Tobi
     response: 5000,  // Wait 5 seconds for the server to start sending,
     deadline: 60000, // but allow 1 minute for the file to finish loading.
   })
-  .end(function(err, res){
+  .then(function(res) {
     if (err.timeout) { /* timed out! */ }
   });
 </code></pre><p>Timeout errors have a <code>.timeout</code> property.</p>
@@ -323,9 +325,9 @@ Tobi
 <pre><code>request
   .get(&#39;http://local&#39;)
   .auth(&#39;tobi&#39;, &#39;learnboost&#39;)
-  .end(callback);
+  .then(callback);
 </code></pre><p>In the <em>Node</em> client Basic auth can be in the URL as &quot;user:pass&quot;:</p>
-<pre><code>request.get(&#39;http://tobi:learnboost@local&#39;).end(callback);
+<pre><code>request.get(&#39;http://tobi:learnboost@local&#39;).then(callback);
 </code></pre><p>By default only <code>Basic</code> auth is used. In browser you can add <code>{type:&#39;auto&#39;}</code> to enable all methods built-in in the browser (Digest, NTLM, etc.):</p>
 <pre><code>request.auth(&#39;digest&#39;, &#39;secret&#39;, {type:&#39;auto&#39;})
 </code></pre><h2 id="following-redirects">Following redirects</h2>
@@ -333,7 +335,7 @@ Tobi
 <pre><code>request
   .get(&#39;/some.png&#39;)
   .redirects(2)
-  .end(callback);
+  .then(callback);
 </code></pre><h2 id="agents-for-global-state">Agents for global state</h2>
 <h3 id="saving-cookies">Saving cookies</h3>
 <p>In Node SuperAgent does not save cookies by default, but you can use the <code>.agent()</code> method to create a copy of SuperAgent that saves cookies. Each copy has a separate cookie jar.</p>
@@ -395,7 +397,7 @@ const req = request
   .attach(&#39;image1&#39;, &#39;path/to/felix.jpeg&#39;)
   .attach(&#39;image2&#39;, imageBuffer, &#39;luna.jpeg&#39;)
   .field(&#39;caption&#39;, &#39;My cats&#39;)
-  .end(callback);
+  .then(callback);
 </code></pre><h3 id="field-values">Field values</h3>
 <p>Much like form fields in HTML, you can set field values with <code>.field(name, value)</code> and <code>.field({name: value})</code>. Suppose you want to upload a few images with your name and email, your request might look something like this:</p>
 <pre><code> request
@@ -404,7 +406,7 @@ const req = request
    .field(&#39;user[email]&#39;, &#39;tobi@learnboost.com&#39;)
    .field(&#39;friends[]&#39;, [&#39;loki&#39;, &#39;jane&#39;])
    .attach(&#39;image&#39;, &#39;path/to/tobi.png&#39;)
-   .end(callback);
+   .then(callback);
 </code></pre><h2 id="compression">Compression</h2>
 <p>The node client supports compressed responses, best of all, you don&#39;t have to do anything! It just works.</p>
 <h2 id="buffering-responses">Buffering responses</h2>
@@ -416,7 +418,7 @@ const req = request
 <pre><code>request
   .get(&#39;http://api.example.com:4001/&#39;)
   .withCredentials()
-  .then(function(res){
+  .then(function(res) {
     assert.equal(200, res.status);
     assert.equal(&#39;tobi&#39;, res.text);
   })
@@ -425,7 +427,7 @@ const req = request
 <pre><code>request
  .post(&#39;/upload&#39;)
  .attach(&#39;image&#39;, &#39;path/to/tobi.png&#39;)
- .end(function(err, res){
+ .then(function(res) {
 
  });
 </code></pre><p>An &quot;error&quot; event is also emitted, with you can listen for:</p>
@@ -433,7 +435,7 @@ const req = request
   .post(&#39;/upload&#39;)
   .attach(&#39;image&#39;, &#39;path/to/tobi.png&#39;)
   .on(&#39;error&#39;, handle)
-  .end(function(err, res){
+  .then(function(res) {
 
   });
 </code></pre><p>Note that <strong>superagent considers 4xx and 5xx responses (as well as unhandled 3xx responses) errors by default</strong>. For example, if you get a <code>304 Not modified</code>, <code>403 Forbidden</code> or <code>500 Internal server error</code> response, this status information will be available via <code>err.status</code>. Errors from such responses also contain an <code>err.response</code> field with all of the properties mentioned in &quot;<a href="#response-properties">Response properties</a>&quot;. The library behaves in this way to handle the common case of wanting success responses and treating HTTP error status codes as errors while still allowing for custom logic around specific error conditions.</p>
