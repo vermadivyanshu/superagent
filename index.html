@@ -161,7 +161,24 @@ simply the extension name such as &quot;xml&quot;, &quot;json&quot;, &quot;png&q
  request.post(&#39;/user&#39;)
    .type(&#39;png&#39;)
 </code></pre><h2 id="serializing-request-body">Serializing request body</h2>
-<p>SuperAgent will automatically serialize JSON and forms. If you want to send the payload in a custom format, you can replace the built-in serialization with <code>.serialize()</code> method.</p>
+<p>SuperAgent will automatically serialize JSON and forms.
+You can setup automatic serialization for other types as well:</p>
+<pre><code class="lang-js">request.serialize[&#39;application/xml&#39;] = function (obj) {
+    return &#39;string generated from obj&#39;;
+};
+
+//going forward, all requests with a Content-type of
+//&#39;application/xml&#39; will be automatically serialized
+</code></pre>
+<p>If you want to send the payload in a custom format, you can replace
+the built-in serialization with the <code>.serialize()</code> method on a per-request basis:</p>
+<pre><code class="lang-js">request
+    .post(&#39;/user&#39;)
+    .send({foo: &#39;bar&#39;})
+    .serialize(function serializer(obj) {
+        return &#39;string generated from obj&#39;;
+    });
+</code></pre>
 <h2 id="retrying-requests">Retrying requests</h2>
 <p>When given the <code>.retry()</code> method, SuperAgent will automatically retry requests, if they fail in a way that is transient or could be due to a flaky Internet connection.</p>
 <p>This method has two optional arguments: number of retries (default 3) and a callback. It calls <code>callback(err, res)</code> before each retry. The callback may return <code>true</code>/<code>false</code> to control whether the request sould be retried (but the maximum number of retries is always applied).</p>
@@ -234,7 +251,25 @@ request
   .then(res =&gt; {});
 </code></pre>
 <h2 id="parsing-response-bodies">Parsing response bodies</h2>
-<p>SuperAgent will parse known response-body data for you, currently supporting <code>application/x-www-form-urlencoded</code>, <code>application/json</code>, and <code>multipart/form-data</code>.</p>
+<p>SuperAgent will parse known response-body data for you,
+currently supporting <code>application/x-www-form-urlencoded</code>,
+<code>application/json</code>, and <code>multipart/form-data</code>. You can setup
+automatic parsing for other response-body data as well:</p>
+<pre><code class="lang-js">//browser
+request.parse[&#39;application/xml&#39;] = function (str) {
+    return {&#39;object&#39;: &#39;parsed from str&#39;};
+};
+
+//node
+request.parse[&#39;application/xml&#39;] = function (res, cb) {
+    //parse response text and set res.body here
+
+    cb(null, res);
+};
+
+//going forward, responses of type &#39;application/xml&#39;
+//will be parsed automatically
+</code></pre>
 <p>You can set a custom parser (that takes precedence over built-in parsers) with the <code>.buffer(true).parse(fn)</code> method. If response buffering is not enabled (<code>.buffer(false)</code>) then the <code>response</code> event will be emitted without waiting for the body parser to finish, so <code>response.body</code> won&#39;t be available.</p>
 <h3 id="json-urlencoded">JSON / Urlencoded</h3>
 <p>The property <code>res.body</code> is the parsed object, for example if a request responded with the JSON string &#39;{&quot;user&quot;:{&quot;name&quot;:&quot;tobi&quot;}}&#39;, <code>res.body.user.name</code> would be &quot;tobi&quot;. Likewise the x-www-form-urlencoded value of &quot;user[name]=tobi&quot; would yield the same result. Only one level of nesting is supported. If you need more complex data, send JSON instead.</p>
@@ -347,13 +382,15 @@ agent
   });
 </code></pre><p>In browsers cookies are managed automatically by the browser, so the <code>.agent()</code> does not isolate cookies.</p>
 <h3 id="default-options-for-multiple-requests">Default options for multiple requests</h3>
-<p>Regular request methods (<code>.use()</code>, <code>.set()</code>, <code>.auth()</code>) called on the agent will be used as defaults for all requests made by that agent.</p>
+<p>Regular request methods called on the agent will be used as defaults for all requests made by that agent.</p>
 <pre><code>const agent = request.agent()
   .use(plugin)
   .auth(shared);
 
 await agent.get(&#39;/with-plugin-and-auth&#39;);
 await agent.get(&#39;/also-with-plugin-and-auth&#39;);
+</code></pre><p>The complete list of methods that the agent can use to set defaults is:</p>
+<pre><code> &quot;use&quot;, &quot;on&quot;, &quot;once&quot;, &quot;set&quot;, &quot;query&quot;, &quot;type&quot;, &quot;accept&quot;, &quot;auth&quot;, &quot;withCredentials&quot;, &quot;sortQuery&quot;, &quot;retry&quot;, &quot;ok&quot;, &quot;redirects&quot;, &quot;timeout&quot;, &quot;buffer&quot;, &quot;serialize&quot;, &quot;parse&quot;, &quot;ca&quot;, &quot;key&quot;, &quot;pfx&quot;, &quot;cert&quot;
 </code></pre><h2 id="piping-data">Piping data</h2>
 <p>The Node client allows you to pipe data to and from the request. For example piping a file&#39;s contents as the request:</p>
 <pre><code>const request = require(&#39;superagent&#39;);

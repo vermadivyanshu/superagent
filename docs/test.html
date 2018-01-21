@@ -2809,8 +2809,8 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
             <section class="suite">
               <h1>request</h1>
               <dl>
-                <dt>should give a good response with client certificates and CA</dt>
-                <dd><pre><code>done =&#x3E; {
+                <dt class="error">should give a good response with client certificates and CA</dt>
+                <dd class="error"><pre><code>done =&#x3E; {
         request
           .get(testEndpoint)
           .ca(ca)
@@ -2822,8 +2822,9 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
             done();
           });
       }</code></pre></dd>
-                <dt>should give a good response with client pfx</dt>
-                <dd><pre><code>done =&#x3E; {
+                <dd class="error">TypeError: Cannot read property &#x27;ok&#x27; of undefined</dd>
+                <dt class="error">should give a good response with client pfx</dt>
+                <dd class="error"><pre><code>done =&#x3E; {
         request
           .get(testEndpoint)
           .pfx(pfx)
@@ -2833,8 +2834,9 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
             done();
           });
       }</code></pre></dd>
-                <dt>should give a good response with client pfx with passphrase</dt>
-                <dd><pre><code>done =&#x3E; {
+                <dd class="error">TypeError: Cannot read property &#x27;ok&#x27; of undefined</dd>
+                <dt class="error">should give a good response with client pfx with passphrase</dt>
+                <dd class="error"><pre><code>done =&#x3E; {
         request
           .get(testEndpoint)
           .pfx({
@@ -2847,13 +2849,14 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
             done();
           });
       }</code></pre></dd>
+                <dd class="error">TypeError: Cannot read property &#x27;ok&#x27; of undefined</dd>
               </dl>
             </section>
             <section class="suite">
               <h1>.agent</h1>
               <dl>
-                <dt>should be able to make multiple requests without redefining the certificates</dt>
-                <dd><pre><code>done =&#x3E; {
+                <dt class="error">should be able to make multiple requests without redefining the certificates</dt>
+                <dd class="error"><pre><code>done =&#x3E; {
         const agent = request.agent({ ca, key, cert });
         agent.get(testEndpoint).end((err, res) =&#x3E; {
           assert(res.ok);
@@ -2865,8 +2868,9 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
           });
         });
       }</code></pre></dd>
-                <dt>should be able to make multiple requests without redefining pfx</dt>
-                <dd><pre><code>done =&#x3E; {
+                <dd class="error">TypeError: Cannot read property &#x27;ok&#x27; of undefined</dd>
+                <dt class="error">should be able to make multiple requests without redefining pfx</dt>
+                <dd class="error"><pre><code>done =&#x3E; {
         const agent = request.agent({ pfx });
         agent.get(testEndpoint).end((err, res) =&#x3E; {
           assert(res.ok);
@@ -2878,6 +2882,7 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
           });
         });
       }</code></pre></dd>
+                <dd class="error">TypeError: Cannot read property &#x27;ok&#x27; of undefined</dd>
               </dl>
             </section>
           </dl>
@@ -3702,6 +3707,38 @@ return req;</code></pre></dd>
         <section class="suite">
           <h1>on redirect</h1>
           <dl>
+            <dt>should merge cookies if agent is used</dt>
+            <dd><pre><code>request
+.agent()
+.get(base + &#x27;/cookie-redirect&#x27;)
+.set(&#x27;Cookie&#x27;, &#x27;orig=1; replaced=not&#x27;)
+.end(function(err, res){
+  try {
+    assert.ifError(err);
+    assert(/orig=1/.test(res.text), &#x22;orig=1/.test&#x22;);
+    assert(/replaced=yes/.test(res.text), &#x22;replaced=yes/.test&#x22;);
+    assert(/from-redir=1/.test(res.text), &#x22;from-redir=1&#x22;);
+    done();
+  } catch(err) {
+    done(err);
+  }
+});</code></pre></dd>
+            <dt>should not merge cookies if agent is not used</dt>
+            <dd><pre><code>request
+.get(base + &#x27;/cookie-redirect&#x27;)
+.set(&#x27;Cookie&#x27;, &#x27;orig=1; replaced=not&#x27;)
+.end(function(err, res){
+  try {
+    assert.ifError(err);
+    assert(/orig=1/.test(res.text), &#x22;/orig=1&#x22;);
+    assert(/replaced=not/.test(res.text), &#x22;/replaced=not&#x22;);
+    assert(!/replaced=yes/.test(res.text), &#x22;!/replaced=yes&#x22;);
+    assert(!/from-redir/.test(res.text), &#x22;!/from-redir&#x22;);
+    done();
+  } catch(err) {
+    done(err);
+  }
+});</code></pre></dd>
             <dt>should follow Location</dt>
             <dd><pre><code>done =&#x3E; {
       const redirects = [];
