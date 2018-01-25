@@ -389,9 +389,8 @@ agent
 
 await agent.get(&#39;/with-plugin-and-auth&#39;);
 await agent.get(&#39;/also-with-plugin-and-auth&#39;);
-</code></pre><p>The complete list of methods that the agent can use to set defaults is:</p>
-<pre><code> &quot;use&quot;, &quot;on&quot;, &quot;once&quot;, &quot;set&quot;, &quot;query&quot;, &quot;type&quot;, &quot;accept&quot;, &quot;auth&quot;, &quot;withCredentials&quot;, &quot;sortQuery&quot;, &quot;retry&quot;, &quot;ok&quot;, &quot;redirects&quot;, &quot;timeout&quot;, &quot;buffer&quot;, &quot;serialize&quot;, &quot;parse&quot;, &quot;ca&quot;, &quot;key&quot;, &quot;pfx&quot;, &quot;cert&quot;
-</code></pre><h2 id="piping-data">Piping data</h2>
+</code></pre><p>The complete list of methods that the agent can use to set defaults is: <code>use</code>, <code>on</code>, <code>once</code>, <code>set</code>, <code>query</code>, <code>type</code>, <code>accept</code>, <code>auth</code>, <code>withCredentials</code>, <code>sortQuery</code>, <code>retry</code>, <code>ok</code>, <code>redirects</code>, <code>timeout</code>, <code>buffer</code>, <code>serialize</code>, <code>parse</code>, <code>ca</code>, <code>key</code>, <code>pfx</code>, <code>cert</code>.</p>
+<h2 id="piping-data">Piping data</h2>
 <p>The Node client allows you to pipe data to and from the request. For example piping a file&#39;s contents as the request:</p>
 <pre><code>const request = require(&#39;superagent&#39;);
 const fs = require(&#39;fs&#39;);
