@@ -13,7 +13,6 @@ test-node:
 		--require should \
 		--reporter $(REPORTER) \
 		--timeout 5000 \
-		--growl \
 		$(NODETESTS)
 
 test-cov: lib-cov
@@ -30,6 +29,7 @@ lib-cov:
 
 superagent.js: lib/node/*.js lib/node/parsers/*.js
 	@./node_modules/.bin/browserify \
+		-t [ babelify --presets [ "babel-preset-es2015" --loose true ] ]  \
 		--standalone superagent \
 		--outfile superagent.js .
 
@@ -39,7 +39,7 @@ test-server:
 docs: index.html test-docs docs/index.md
 
 index.html: docs/index.md docs/head.html docs/tail.html
-	marked < $< \
+	./node_modules/.bin/marked < $< \
 		| cat docs/head.html - docs/tail.html \
 		> $@
 

@@ -1,11 +1,11 @@
 require('should');
 require('should-http');
 
-var NODE = true;
-var uri = 'http://localhost:5000';
+let NODE = true;
+let uri = 'http://localhost:5000';
 if (typeof window !== 'undefined') {
   NODE = false;
-  uri = '//' + window.location.host;
+  uri = `//${window.location.host}`;
 }
 else {
   process.env.ZUUL_PORT = 5000;

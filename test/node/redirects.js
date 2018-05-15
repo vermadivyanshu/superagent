@@ -8,12 +8,12 @@ const request = require("../../");
 describe("request", () => {
   describe("on redirect", () => {
 
-    it('should merge cookies if agent is used', function(done){
+    it('should merge cookies if agent is used', done => {
       request
       .agent()
-      .get(base + '/cookie-redirect')
+      .get(`${base}/cookie-redirect`)
       .set('Cookie', 'orig=1; replaced=not')
-      .end(function(err, res){
+      .end((err, res) => {
         try {
           assert.ifError(err);
           assert(/orig=1/.test(res.text), "orig=1/.test");
@@ -26,11 +26,11 @@ describe("request", () => {
       });
     })
 
-    it('should not merge cookies if agent is not used', function(done){
+    it('should not merge cookies if agent is not used', done => {
       request
-      .get(base + '/cookie-redirect')
+      .get(`${base}/cookie-redirect`)
       .set('Cookie', 'orig=1; replaced=not')
-      .end(function(err, res){
+      .end((err, res) => {
         try {
           assert.ifError(err);
           assert(/orig=1/.test(res.text), "/orig=1");
@@ -41,6 +41,28 @@ describe("request", () => {
         } catch(err) {
           done(err);
         }
+      });
+    })
+
+    it("should have previously set cookie for subsquent requests when agent is used", done => {
+      const agent = request.agent();
+      agent
+      .get(`${base}/set-cookie`)
+      .end((err) => {
+        assert.ifError(err);
+        agent
+        .get(`${base}/show-cookies`)
+        .set({'Cookie': 'orig=1'})
+        .end((err, res) => {
+          try {
+            assert.ifError(err);
+            assert(/orig=1/.test(res.text), "orig=1/.test");
+            assert(/persist=123/.test(res.text), "persist=123");
+            done();
+          } catch(err) {
+            done(err);
+          }
+        });
       });
     })
 
