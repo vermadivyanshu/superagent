@@ -456,7 +456,7 @@ describe('request', function(){
       .send({ name: 'tobi' })
       .end((err, res) => {
         try {
-        assert.equal(null, err);
+        assert.ifError(err)
         res.text.should.equal('{"name":"tobi"}');
         done();
         } catch(e) { done(e); }
@@ -494,6 +494,7 @@ describe('request', function(){
       .post(`${uri}/echo`)
       .send({ name: 'tobi' })
       .then(res => {
+        res.type.should.equal('application/json');
         res.text.should.equal('{"name":"tobi"}');
         done();
       })
@@ -533,8 +534,8 @@ describe('request', function(){
   describe('.abort()', () => {
     it('should abort the request', done => {
       const req = request
-      .get(`${uri}/delay/3000`)
-      .end((err, res) => {
+      .get(`${uri}/delay/3000`);
+      req.end((err, res) => {
         try {
         assert(false, 'should not complete the request');
         } catch(e) { done(e); }
@@ -552,8 +553,8 @@ describe('request', function(){
 
     it('should allow chaining .abort() several times', done => {
       const req = request
-      .get(`${uri}/delay/3000`)
-      .end((err, res) => {
+      .get(`${uri}/delay/3000`);
+      req.end((err, res) => {
         try {
         assert(false, 'should not complete the request');
         } catch(e) { done(e); }
@@ -581,8 +582,8 @@ describe('request', function(){
     it('should describe the request', done => {
       const req = request
       .post(`${uri}/echo`)
-      .send({ foo: 'baz' })
-      .end((err, res) => {
+      .send({ foo: 'baz' });
+      req.end((err, res) => {
         try {
         const json = req.toJSON();
         assert.equal('POST', json.method);

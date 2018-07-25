@@ -16,7 +16,7 @@
    .send({ name: &#39;Manny&#39;, species: &#39;cat&#39; })
    .set(&#39;X-API-Key&#39;, &#39;foobar&#39;)
    .set(&#39;Accept&#39;, &#39;application/json&#39;)
-   .then(function(res) {
+   .then(res =&gt; {
       alert(&#39;yay got &#39; + JSON.stringify(res.body));
    });
 </code></pre><h2 id="test-documentation">Test documentation</h2>
@@ -25,22 +25,22 @@
 <p>A request can be initiated by invoking the appropriate method on the <code>request</code> object, then calling <code>.then()</code> (or <code>.end()</code> <a href="#promise-and-generator-support">or <code>await</code></a>) to send the request. For example a simple <strong>GET</strong> request:</p>
 <pre><code> request
    .get(&#39;/search&#39;)
-   .then(function(res) {
+   .then(res =&gt; {
       // res.body, res.headers, res.status
    })
-   .catch(function(err) {
+   .catch(err =&gt; {
       // err.message, err.response
    });
 </code></pre><p>HTTP method may also be passed as a string:</p>
 <pre><code>request(&#39;GET&#39;, &#39;/search&#39;).then(success, failure);
-</code></pre><p>Old-style callbacks are also supported. <em>Instead of</em> <code>.then()</code> you can call <code>.end()</code>:</p>
+</code></pre><p>Old-style callbacks are also supported, but not recommended. <em>Instead of</em> <code>.then()</code> you can call <code>.end()</code>:</p>
 <pre><code>request(&#39;GET&#39;, &#39;/search&#39;).end(function(err, res){
   if (res.ok) {}
 });
 </code></pre><p>Absolute URLs can be used. In web browsers absolute URLs work only if the server implements <a href="#cors">CORS</a>.</p>
 <pre><code> request
    .get(&#39;http://example.com/search&#39;)
-   .then(function(res) {
+   .then(res =&gt; {
 
    });
 </code></pre><p>The <strong>Node</strong> client supports making requests to <a href="http://en.wikipedia.org/wiki/Unix_domain_socket">Unix Domain Sockets</a>:</p>
@@ -54,12 +54,12 @@
 </code></pre><p><strong>DELETE</strong>, <strong>HEAD</strong>, <strong>PATCH</strong>, <strong>POST</strong>, and <strong>PUT</strong> requests can also be used, simply change the method name:</p>
 <pre><code>request
   .head(&#39;/favicon.ico&#39;)
-  .then(function(res) {
+  .then(res =&gt; {
 
   });
 </code></pre><p><strong>DELETE</strong> can be also called as <code>.del()</code> for compatibility with old IE where <code>delete</code> is a reserved word.</p>
 <p>The HTTP method defaults to <strong>GET</strong>, so if you wish, the following is valid:</p>
-<pre><code> request(&#39;/search&#39;, function(err, res){
+<pre><code> request(&#39;/search&#39;, (err, res) =&gt; {
 
  });
 </code></pre><h2 id="setting-header-fields">Setting header fields</h2>
@@ -81,21 +81,21 @@
    .query({ query: &#39;Manny&#39; })
    .query({ range: &#39;1..5&#39; })
    .query({ order: &#39;desc&#39; })
-   .then(function(res) {
+   .then(res =&gt; {
 
    });
 </code></pre><p>Or as a single object:</p>
 <pre><code>request
   .get(&#39;/search&#39;)
   .query({ query: &#39;Manny&#39;, range: &#39;1..5&#39;, order: &#39;desc&#39; })
-  .then(function(res) {
+  .then(res =&gt; {
 
   });
 </code></pre><p>The <code>.query()</code> method accepts strings as well:</p>
 <pre><code>  request
     .get(&#39;/querystring&#39;)
     .query(&#39;search=Manny&amp;range=1..5&#39;)
-    .then(function(res) {
+    .then(res =&gt; {
 
     });
 </code></pre><p>Or joined:</p>
@@ -103,7 +103,7 @@
     .get(&#39;/querystring&#39;)
     .query(&#39;search=Manny&#39;)
     .query(&#39;range=1..5&#39;)
-    .then(function(res) {
+    .then(res =&gt; {
 
     });
 </code></pre><h2 id="head-requests"><code>HEAD</code> requests</h2>
@@ -111,7 +111,7 @@
 <pre><code>  request
     .head(&#39;/users&#39;)
     .query({ email: &#39;joe@smith.com&#39; })
-    .then(function(res) {
+    .then(res =&gt; {
 
     });
 </code></pre><h2 id="post-put-requests"><code>POST</code> / <code>PUT</code> requests</h2>
@@ -167,15 +167,15 @@ You can setup automatic serialization for other types as well:</p>
     return &#39;string generated from obj&#39;;
 };
 
-//going forward, all requests with a Content-type of
-//&#39;application/xml&#39; will be automatically serialized
+// going forward, all requests with a Content-type of
+// &#39;application/xml&#39; will be automatically serialized
 </code></pre>
 <p>If you want to send the payload in a custom format, you can replace
 the built-in serialization with the <code>.serialize()</code> method on a per-request basis:</p>
 <pre><code class="lang-js">request
     .post(&#39;/user&#39;)
     .send({foo: &#39;bar&#39;})
-    .serialize(function serializer(obj) {
+    .serialize(obj =&gt; {
         return &#39;string generated from obj&#39;;
     });
 </code></pre>
@@ -220,9 +220,7 @@ the built-in serialization with the <code>.serialize()</code> method on a per-re
  request.get(&#39;/user&#39;)
    .query(&#39;name=Nick&#39;)
    .query(&#39;search=Manny&#39;)
-   .sortQuery(function(a, b){
-     return a.length - b.length;
-   })
+   .sortQuery((a, b) =&gt; a.length - b.length)
    .then(callback)
 </code></pre>
 <h2 id="tls-options">TLS options</h2>
@@ -296,7 +294,7 @@ Tobi
 </ul>
 <pre><code class="lang-js">req.get(&#39;/binary.data&#39;)
   .responseType(&#39;blob&#39;)
-  .end(function (error, res) {
+  .then(res =&gt; {
     // res.body will be a browser native Blob type here
   });
 </code></pre>
@@ -457,7 +455,7 @@ const req = request
 <pre><code>request
   .get(&#39;http://api.example.com:4001/&#39;)
   .withCredentials()
-  .then(function(res) {
+  .then(res =&gt; {
     assert.equal(200, res.status);
     assert.equal(&#39;tobi&#39;, res.text);
   })
@@ -466,7 +464,7 @@ const req = request
 <pre><code>request
  .post(&#39;/upload&#39;)
  .attach(&#39;image&#39;, &#39;path/to/tobi.png&#39;)
- .then(function(res) {
+ .then(res =&gt; {
 
  });
 </code></pre><p>An &quot;error&quot; event is also emitted, with you can listen for:</p>
@@ -474,7 +472,7 @@ const req = request
   .post(&#39;/upload&#39;)
   .attach(&#39;image&#39;, &#39;path/to/tobi.png&#39;)
   .on(&#39;error&#39;, handle)
-  .then(function(res) {
+  .then(res =&gt; {
 
   });
 </code></pre><p>Note that <strong>superagent considers 4xx and 5xx responses (as well as unhandled 3xx responses) errors by default</strong>. For example, if you get a <code>304 Not modified</code>, <code>403 Forbidden</code> or <code>500 Internal server error</code> response, this status information will be available via <code>err.status</code>. Errors from such responses also contain an <code>err.response</code> field with all of the properties mentioned in &quot;<a href="#response-properties">Response properties</a>&quot;. The library behaves in this way to handle the common case of wanting success responses and treating HTTP error status codes as errors while still allowing for custom logic around specific error conditions.</p>
@@ -505,7 +503,7 @@ else if (err) {
       loaded: // bytes downloaded or uploaded so far
     } */
   })
-  .end()
+  .then()
 </code></pre><h2 id="promise-and-generator-support">Promise and Generator support</h2>
 <p>SuperAgent&#39;s request is a &quot;thenable&quot; object that&#39;s compatible with JavaScript promises and <code>async</code>/<code>await</code> syntax.</p>
 <p>If you&#39;re using promises, <strong>do not</strong> call <code>.end()</code> or <code>.pipe()</code>. Any use of <code>.then()</code> or <code>await</code> disables all other ways of using the request.</p>

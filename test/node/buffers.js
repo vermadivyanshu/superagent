@@ -18,7 +18,7 @@ describe("req.buffer['someMimeType']", () => {
             .send(send)
             .end((err, res) => {
                 delete request.buffer[type];
-                assert.equal(null, err);
+                assert.ifError(err)
                 assert.equal(res.type, type);
                 assert.equal(send, res.text);
                 assert(res.buffered);
@@ -38,7 +38,7 @@ describe("req.buffer['someMimeType']", () => {
             .send(send)
             .end((err, res) => {
                 delete request.buffer[type];
-                assert.equal(null, err);
+                assert.ifError(err)
                 assert.equal(null, res.text);
                 assert.equal(res.type, type);
                 assert(!res.buffered);
@@ -65,7 +65,7 @@ describe("req.buffer['someMimeType']", () => {
             .send(send)
             .end((err, res) => {
                 delete request.buffer[type];
-                assert.equal(null, err);
+                assert.ifError(err)
                 assert.equal(null, res.text);
                 assert.equal(res.type, type);
                 assert(!res.buffered);
@@ -91,27 +91,24 @@ describe("req.buffer['someMimeType']", () => {
             .send(send)
             .end((err, res) => {
                 delete request.buffer[type];
-                assert.equal(null, err);
+                assert.ifError(err)
                 assert.equal(res.type, type);
                 assert.equal(send, res.text);
                 assert(res.buffered);
                 done();
             })
     });
-    it('should fallback to default handling for that mimetype when undefined', done => {
+    it('should fallback to default handling for that mimetype when undefined', () => {
         const type = 'application/bazzz';
         const send = 'woooooo';
-        request
+        return request
             .post(`${base}/echo`)
             .type(type)
             .send(send)
-            .end((err, res) => {
-                assert.equal(null, err);
-                assert.equal(null, res.text);
+            .then(res => {
                 assert.equal(res.type, type);
-                assert(!res.buffered);
-                res.body.should.eql({});
-                done();
+                assert.equal(send, res.body.toString());
+                assert(res.buffered);
             })
     })
 });

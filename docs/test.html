@@ -521,7 +521,7 @@ return request
       .send({ name: &#x27;tobi&#x27; })
       .end((err, res) =&#x3E; {
         try {
-        assert.equal(null, err);
+        assert.ifError(err)
         res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;}&#x27;);
         done();
         } catch(e) { done(e); }
@@ -561,6 +561,7 @@ return request
       .post(&#x60;${uri}/echo&#x60;)
       .send({ name: &#x27;tobi&#x27; })
       .then(res =&#x3E; {
+        res.type.should.equal(&#x27;application/json&#x27;);
         res.text.should.equal(&#x27;{&#x22;name&#x22;:&#x22;tobi&#x22;}&#x27;);
         done();
       })
@@ -604,8 +605,8 @@ return request
             <dt>should abort the request</dt>
             <dd><pre><code>done =&#x3E; {
       const req = request
-      .get(&#x60;${uri}/delay/3000&#x60;)
-      .end((err, res) =&#x3E; {
+      .get(&#x60;${uri}/delay/3000&#x60;);
+      req.end((err, res) =&#x3E; {
         try {
         assert(false, &#x27;should not complete the request&#x27;);
         } catch(e) { done(e); }
@@ -621,8 +622,8 @@ return request
             <dt>should allow chaining .abort() several times</dt>
             <dd><pre><code>done =&#x3E; {
       const req = request
-      .get(&#x60;${uri}/delay/3000&#x60;)
-      .end((err, res) =&#x3E; {
+      .get(&#x60;${uri}/delay/3000&#x60;);
+      req.end((err, res) =&#x3E; {
         try {
         assert(false, &#x27;should not complete the request&#x27;);
         } catch(e) { done(e); }
@@ -651,8 +652,8 @@ return request
             <dd><pre><code>done =&#x3E; {
       const req = request
       .post(&#x60;${uri}/echo&#x60;)
-      .send({ foo: &#x27;baz&#x27; })
-      .end((err, res) =&#x3E; {
+      .send({ foo: &#x27;baz&#x27; });
+      req.end((err, res) =&#x3E; {
         try {
         const json = req.toJSON();
         assert.equal(&#x27;POST&#x27;, json.method);
@@ -1987,8 +1988,8 @@ assert.throws(() =&#x3E; {
         <dd><pre><code>next =&#x3E; {
   const req = request
   .get(&#x60;${uri}/delay/3000&#x60;)
-  .timeout(1000)
-  .end((err, res) =&#x3E; {
+  .timeout(1000);
+  req.end((err, res) =&#x3E; {
     try {
     assert(err, &#x27;error missing&#x27;);
     assert.equal(1000, err.timeout, &#x27;err.timeout missing&#x27;);
@@ -2003,8 +2004,8 @@ assert.throws(() =&#x3E; {
         <dd><pre><code>next =&#x3E; {
   const req = request
   .get(&#x60;${uri}/delay/const&#x60;)
-  .timeout(1000)
-  .end((err, res) =&#x3E; {
+  .timeout(1000);
+  req.end((err, res) =&#x3E; {
     try {
     assert(err, &#x27;error missing&#x27;);
     assert.equal(1000, err.timeout, &#x27;err.timeout missing&#x27;);
@@ -2225,8 +2226,8 @@ assert.throws(() =&#x3E; {
     const req = request
     .get(&#x60;${base}/delay/400&#x60;)
     .timeout(200)
-    .retry(2)
-    .end((err, res) =&#x3E; {
+    .retry(2);
+    req.end((err, res) =&#x3E; {
       try {
         assert(false, &#x27;should not complete the request&#x27;);
       } catch(e) { done(e); }
@@ -2770,7 +2771,7 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
         .get(&#x60;${base}/custom&#x60;)
         .buffer()
         .end((err, res) =&#x3E; {
-          assert.equal(null, err);
+          assert.ifError(err)
           assert.equal(&#x22;custom stuff&#x22;, res.text);
           assert(res.buffered);
           done();
@@ -2788,7 +2789,7 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
             .buffer()
             .end((err, res) =&#x3E; {
                 delete request.buffer[type];
-                assert.equal(null, err);
+                assert.ifError(err)
                 assert.equal(res.type, type);
                 assert.equal(send, res.text);
                 assert(res.buffered);
@@ -2808,7 +2809,7 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
         .send(&#x22;hello this is dog&#x22;)
         .buffer(false)
         .end((err, res) =&#x3E; {
-          assert.equal(null, err);
+          assert.ifError(err)
           assert.equal(null, res.text);
           res.body.should.eql({});
           let buf = &#x22;&#x22;;
@@ -2834,7 +2835,7 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
               .buffer(false)
               .end((err, res) =&#x3E; {
                   delete request.buffer[type];
-                  assert.equal(null, err);
+                  assert.ifError(err)
                   assert.equal(null, res.text);
                   assert.equal(res.type, type);
                   assert(!res.buffered);
@@ -2861,7 +2862,7 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
         .get(&#x60;${base}/custom&#x60;)
         .withCredentials()
         .end((err, res) =&#x3E; {
-          assert.equal(null, err);
+          assert.ifError(err)
           done();
         });
     }</code></pre></dd>
@@ -2909,28 +2910,16 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
         <section class="suite">
           <h1>with a content type other than application/json or text/*</h1>
           <dl>
-            <dt>should disable buffering</dt>
-            <dd><pre><code>done =&#x3E; {
-      request
-        .post(&#x60;${base}/echo&#x60;)
-        .type(&#x22;application/x-dog&#x22;)
-        .send(&#x22;hello this is dog&#x22;)
-        .end((err, res) =&#x3E; {
-          assert.equal(null, err);
-          assert.equal(null, res.text);
-          res.body.should.eql({});
-          let buf = &#x22;&#x22;;
-          res.setEncoding(&#x22;utf8&#x22;);
-          res.buffered.should.be.false;
-          res.on(&#x22;data&#x22;, chunk =&#x3E; {
-            buf += chunk;
-          });
-          res.on(&#x22;end&#x22;, () =&#x3E; {
-            buf.should.equal(&#x22;hello this is dog&#x22;);
-            done();
-          });
-        });
-    }</code></pre></dd>
+            <dt>should still use buffering</dt>
+            <dd><pre><code>return request
+  .post(&#x60;${base}/echo&#x60;)
+  .type(&#x22;application/x-dog&#x22;)
+  .send(&#x22;hello this is dog&#x22;)
+  .then(res =&#x3E; {
+    assert.equal(null, res.text);
+    assert.equal(res.body.toString(), &#x22;hello this is dog&#x22;);
+    res.buffered.should.be.true;
+  });</code></pre></dd>
           </dl>
         </section>
         <section class="suite">
@@ -2947,7 +2936,7 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
         .send(img)
         .buffer(false)
         .end((err, res) =&#x3E; {
-          assert.equal(null, err);
+          assert.ifError(err)
           assert(!res.buffered);
           assert.equal(res.header[&#x22;content-length&#x22;], Buffer.byteLength(img));
           done();
@@ -2962,7 +2951,7 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
         .send(img)
         .buffer(true)
         .end((err, res) =&#x3E; {
-          assert.equal(null, err);
+          assert.ifError(err)
           assert(res.buffered);
           assert.equal(res.header[&#x22;content-length&#x22;], img.length);
           done();
@@ -2988,7 +2977,7 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
             .send(send)
             .end((err, res) =&#x3E; {
                 delete request.buffer[type];
-                assert.equal(null, err);
+                assert.ifError(err)
                 assert.equal(res.type, type);
                 assert.equal(send, res.text);
                 assert(res.buffered);
@@ -3008,7 +2997,7 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
             .send(send)
             .end((err, res) =&#x3E; {
                 delete request.buffer[type];
-                assert.equal(null, err);
+                assert.ifError(err)
                 assert.equal(null, res.text);
                 assert.equal(res.type, type);
                 assert(!res.buffered);
@@ -3035,7 +3024,7 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
             .send(send)
             .end((err, res) =&#x3E; {
                 delete request.buffer[type];
-                assert.equal(null, err);
+                assert.ifError(err)
                 assert.equal(null, res.text);
                 assert.equal(res.type, type);
                 assert(!res.buffered);
@@ -3062,7 +3051,7 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
             .send(send)
             .end((err, res) =&#x3E; {
                 delete request.buffer[type];
-                assert.equal(null, err);
+                assert.ifError(err)
                 assert.equal(res.type, type);
                 assert.equal(send, res.text);
                 assert(res.buffered);
@@ -3070,22 +3059,17 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
             })
     }</code></pre></dd>
         <dt>should fallback to default handling for that mimetype when undefined</dt>
-        <dd><pre><code>done =&#x3E; {
-        const type = &#x27;application/bazzz&#x27;;
-        const send = &#x27;woooooo&#x27;;
-        request
-            .post(&#x60;${base}/echo&#x60;)
-            .type(type)
-            .send(send)
-            .end((err, res) =&#x3E; {
-                assert.equal(null, err);
-                assert.equal(null, res.text);
-                assert.equal(res.type, type);
-                assert(!res.buffered);
-                res.body.should.eql({});
-                done();
-            })
-    }</code></pre></dd>
+        <dd><pre><code>const type = &#x27;application/bazzz&#x27;;
+const send = &#x27;woooooo&#x27;;
+return request
+    .post(&#x60;${base}/echo&#x60;)
+    .type(type)
+    .send(send)
+    .then(res =&#x3E; {
+        assert.equal(res.type, type);
+        assert.equal(send, res.body.toString());
+        assert(res.buffered);
+    })</code></pre></dd>
       </dl>
     </section>
     <section class="suite">
@@ -3469,6 +3453,15 @@ assert.strictEqual(r.get(&#x22;mixed&#x22;), undefined);</code></pre></dd>
         <section class="suite">
           <h1>without encoding set</h1>
           <dl>
+            <dt>should buffer if asked</dt>
+            <dd><pre><code>return request.get(&#x60;${base}/binary&#x60;)
+.buffer(true)
+.then(res =&#x3E; {
+  res.should.have.status(200);
+  assert(res.headers[&#x22;content-length&#x22;]);
+  assert(res.body.byteLength);
+  assert.equal(subject, res.body.toString());
+});</code></pre></dd>
             <dt>should emit buffers</dt>
             <dd><pre><code>done =&#x3E; {
       request.get(&#x60;${base}/binary&#x60;).end((err, res) =&#x3E; {
@@ -3719,6 +3712,7 @@ return req.then(res =&#x3E; {
         <dt>should be the only parser</dt>
         <dd><pre><code>request
       .get(&#x60;${base}/image&#x60;)
+      .buffer(false)
       .parse((res, fn) =&#x3E; {
         res.on(&#x22;data&#x22;, () =&#x3E; {});
       })
@@ -3762,7 +3756,8 @@ return req.then(res =&#x3E; {
   }</code></pre></dd>
         <dt>should not emit error on aborted chunked json</dt>
         <dd><pre><code>done =&#x3E; {
-    const req = request.get(&#x60;${base}/chunked-json&#x60;).end(err =&#x3E; {
+    const req = request.get(&#x60;${base}/chunked-json&#x60;);
+    req.end(err =&#x3E; {
       assert.ifError(err);
       done();
     });
@@ -3810,6 +3805,20 @@ return req;</code></pre></dd>
       done();
     });
     stream.pipe(req);
+  }</code></pre></dd>
+        <dt>end() stops piping</dt>
+        <dd><pre><code>done =&#x3E; {
+    const stream = fs.createWriteStream(destPath);
+    request.get(base)
+      .end((err, res) =&#x3E; {
+        try {
+          res.pipe(stream);
+          return done(Error(&#x22;Did not prevent nonsense pipe&#x22;));
+        } catch(_e) {
+          /* expected error */
+        }
+        done()
+      });
   }</code></pre></dd>
         <dt>should act as a readable stream</dt>
         <dd><pre><code>done =&#x3E; {
@@ -4011,8 +4020,8 @@ return req;</code></pre></dd>
             <dd><pre><code>done =&#x3E; {
       const req = request
         .get(&#x60;${base}/test-301&#x60;)
-        .redirects(1)
-        .end((err, res) =&#x3E; {
+        .redirects(1);
+      req.end((err, res) =&#x3E; {
           req.req._headers.host.should.eql(
             &#x60;localhost:${server2.address().port}&#x60;
           );
@@ -4030,8 +4039,8 @@ return req;</code></pre></dd>
             <dd><pre><code>done =&#x3E; {
       const req = request
         .get(&#x60;${base}/test-302&#x60;)
-        .redirects(1)
-        .end((err, res) =&#x3E; {
+        .redirects(1);
+      req.end((err, res) =&#x3E; {
           req.req._headers.host.should.eql(
             &#x60;localhost:${server2.address().port}&#x60;
           );
@@ -4049,8 +4058,8 @@ return req;</code></pre></dd>
             <dd><pre><code>done =&#x3E; {
       const req = request
         .get(&#x60;${base}/test-303&#x60;)
-        .redirects(1)
-        .end((err, res) =&#x3E; {
+        .redirects(1);
+      req.end((err, res) =&#x3E; {
           req.req._headers.host.should.eql(
             &#x60;localhost:${server2.address().port}&#x60;
           );
@@ -4068,8 +4077,8 @@ return req;</code></pre></dd>
             <dd><pre><code>done =&#x3E; {
       const req = request
         .get(&#x60;${base}/test-307&#x60;)
-        .redirects(1)
-        .end((err, res) =&#x3E; {
+        .redirects(1);
+      req.end((err, res) =&#x3E; {
           req.req._headers.host.should.eql(
             &#x60;localhost:${server2.address().port}&#x60;
           );
@@ -4087,8 +4096,8 @@ return req;</code></pre></dd>
             <dd><pre><code>done =&#x3E; {
       const req = request
         .get(&#x60;${base}/test-308&#x60;)
-        .redirects(1)
-        .end((err, res) =&#x3E; {
+        .redirects(1);
+      req.end((err, res) =&#x3E; {
           req.req._headers.host.should.eql(
             &#x60;localhost:${server2.address().port}&#x60;
           );
@@ -4111,8 +4120,8 @@ return req;</code></pre></dd>
             <dd><pre><code>done =&#x3E; {
       const req = request
         .post(&#x60;${base}/test-301&#x60;)
-        .redirects(1)
-        .end((err, res) =&#x3E; {
+        .redirects(1);
+      req.end((err, res) =&#x3E; {
           req.req._headers.host.should.eql(
             &#x60;localhost:${server2.address().port}&#x60;
           );
@@ -4130,8 +4139,8 @@ return req;</code></pre></dd>
             <dd><pre><code>done =&#x3E; {
       const req = request
         .post(&#x60;${base}/test-302&#x60;)
-        .redirects(1)
-        .end((err, res) =&#x3E; {
+        .redirects(1);
+      req.end((err, res) =&#x3E; {
           req.req._headers.host.should.eql(
             &#x60;localhost:${server2.address().port}&#x60;
           );
@@ -4149,8 +4158,8 @@ return req;</code></pre></dd>
             <dd><pre><code>done =&#x3E; {
       const req = request
         .post(&#x60;${base}/test-303&#x60;)
-        .redirects(1)
-        .end((err, res) =&#x3E; {
+        .redirects(1);
+      req.end((err, res) =&#x3E; {
           req.req._headers.host.should.eql(
             &#x60;localhost:${server2.address().port}&#x60;
           );
@@ -4168,8 +4177,8 @@ return req;</code></pre></dd>
             <dd><pre><code>done =&#x3E; {
       const req = request
         .post(&#x60;${base}/test-307&#x60;)
-        .redirects(1)
-        .end((err, res) =&#x3E; {
+        .redirects(1);
+      req.end((err, res) =&#x3E; {
           req.req._headers.host.should.eql(
             &#x60;localhost:${server2.address().port}&#x60;
           );
@@ -4187,8 +4196,8 @@ return req;</code></pre></dd>
             <dd><pre><code>done =&#x3E; {
       const req = request
         .post(&#x60;${base}/test-308&#x60;)
-        .redirects(1)
-        .end((err, res) =&#x3E; {
+        .redirects(1);
+      req.end((err, res) =&#x3E; {
           req.req._headers.host.should.eql(
             &#x60;localhost:${server2.address().port}&#x60;
           );
