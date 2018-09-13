@@ -16,6 +16,14 @@ test-node:
 		--timeout 5000 \
 		$(NODETESTS)
 
+test-node-http2:
+	@NODE_ENV=test HTTP2_TEST=1 NODE_TLS_REJECT_UNAUTHORIZED=0 node ./node_modules/.bin/mocha \
+		--require should \
+		--trace-warnings \
+		--reporter $(REPORTER) \
+		--timeout 5000 \
+		$(NODETESTS)
+
 test-cov: lib-cov
 	SUPERAGENT_COV=1 $(MAKE) test REPORTER=html-cov > coverage.html
 

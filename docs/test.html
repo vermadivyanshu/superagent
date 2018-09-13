@@ -1587,7 +1587,7 @@ assert.throws(() =&#x3E; {
         <dt>request .end()</dt>
         <dd><pre><code>next =&#x3E; {
   request
-  .get(&#x60;${uri}/echo-header/content-type&#x60;)
+  .put(&#x60;${uri}/echo-header/content-type&#x60;)
   .set(&#x27;Content-Type&#x27;, &#x27;text/plain&#x27;)
   .send(&#x27;wahoo&#x27;)
   .end((err, res) =&#x3E; {
@@ -1600,7 +1600,7 @@ assert.throws(() =&#x3E; {
         <dt>request .send()</dt>
         <dd><pre><code>next =&#x3E; {
   request
-  .get(&#x60;${uri}/echo-header/content-type&#x60;)
+  .put(&#x60;${uri}/echo-header/content-type&#x60;)
   .set(&#x27;Content-Type&#x27;, &#x27;text/plain&#x27;)
   .send(&#x27;wahoo&#x27;)
   .end((err, res) =&#x3E; {
@@ -1613,7 +1613,7 @@ assert.throws(() =&#x3E; {
         <dt>request .set()</dt>
         <dd><pre><code>next =&#x3E; {
   request
-  .get(&#x60;${uri}/echo-header/content-type&#x60;)
+  .put(&#x60;${uri}/echo-header/content-type&#x60;)
   .set(&#x27;Content-Type&#x27;, &#x27;text/plain&#x27;)
   .send(&#x27;wahoo&#x27;)
   .end((err, res) =&#x3E; {
@@ -1626,7 +1626,7 @@ assert.throws(() =&#x3E; {
         <dt>request .set(object)</dt>
         <dd><pre><code>next =&#x3E; {
   request
-  .get(&#x60;${uri}/echo-header/content-type&#x60;)
+  .put(&#x60;${uri}/echo-header/content-type&#x60;)
   .set({ &#x27;Content-Type&#x27;: &#x27;text/plain&#x27; })
   .send(&#x27;wahoo&#x27;)
   .end((err, res) =&#x3E; {
@@ -2202,12 +2202,12 @@ assert.throws(() =&#x3E; {
   }</code></pre></dd>
         <dt>should handle successful request after repeat attempt from server timeout</dt>
         <dd><pre><code>done =&#x3E; {
-    const url = &#x60;/delay/600/ok/${uniqid()}?built=in&#x60;;
+    const url = &#x60;/delay/1200/ok/${uniqid()}?built=in&#x60;;
     request
     .get(base + url)
     .query(&#x22;string=ified&#x22;)
     .query({&#x22;json&#x22;:&#x22;ed&#x22;})
-    .timeout(300)
+    .timeout(600)
     .retry(2)
     .end((err, res) =&#x3E; {
       try {
@@ -3076,7 +3076,7 @@ return request
       <h1>exports</h1>
       <dl>
         <dt>should expose .protocols</dt>
-        <dd><pre><code>Object.keys(request.protocols).should.eql([&#x22;http:&#x22;, &#x22;https:&#x22;]);</code></pre></dd>
+        <dd><pre><code>Object.keys(request.protocols).should.eql([&#x22;http:&#x22;, &#x22;https:&#x22;, &#x22;http2:&#x22;]);</code></pre></dd>
         <dt>should expose .serialize</dt>
         <dd><pre><code>Object.keys(request.serialize).should.eql([
   &#x22;application/x-www-form-urlencoded&#x22;,
@@ -3231,7 +3231,7 @@ return request
         <dd><pre><code>assert.throws(() =&#x3E; {
   request
     .post(&#x22;/echo&#x22;)
-    .send(new Buffer(&#x22;Change this to Buffer.from in April 2017&#x22;))
+    .send(Buffer.from(&#x22;some buffer&#x22;))
     .send({ allowed: false });
 });</code></pre></dd>
       </dl>
@@ -3290,6 +3290,7 @@ return request
           .get(testEndpoint)
           .ca(ca)
           .end((err, res) =&#x3E; {
+            assert.ifError(err);
             assert(res.ok);
             assert.strictEqual(&#x22;Safe and secure!&#x22;, res.text);
             done();
@@ -3304,9 +3305,11 @@ return request
                 <dd><pre><code>done =&#x3E; {
         const agent = request.agent({ ca });
         agent.get(testEndpoint).end((err, res) =&#x3E; {
+          assert.ifError(err);
           assert(res.ok);
           assert.strictEqual(&#x22;Safe and secure!&#x22;, res.text);
           agent.get(url.parse(testEndpoint)).end((err, res) =&#x3E; {
+            assert.ifError(err);
             assert(res.ok);
             assert.strictEqual(&#x22;Safe and secure!&#x22;, res.text);
             done();
@@ -3827,7 +3830,7 @@ return req;</code></pre></dd>
     const req = request.get(base);
     req.type(&#x22;json&#x22;);
     req.on(&#x22;response&#x22;, res =&#x3E; {
-      res.should.have.status(200);
+      res.status.should.eql(200);
       responseCalled = true;
     });
     stream.on(&#x22;finish&#x22;, () =&#x3E; {
@@ -4022,13 +4025,13 @@ return req;</code></pre></dd>
         .get(&#x60;${base}/test-301&#x60;)
         .redirects(1);
       req.end((err, res) =&#x3E; {
-          req.req._headers.host.should.eql(
-            &#x60;localhost:${server2.address().port}&#x60;
-          );
-          res.status.should.eql(200);
-          res.text.should.eql(&#x22;GET&#x22;);
-          done();
-        });
+        req.req._headers.host.should.eql(
+          &#x60;localhost:${server2.address().port}&#x60;
+        );
+        res.status.should.eql(200);
+        res.text.should.eql(&#x22;GET&#x22;);
+        done();
+      });
     }</code></pre></dd>
           </dl>
         </section>
@@ -4041,13 +4044,13 @@ return req;</code></pre></dd>
         .get(&#x60;${base}/test-302&#x60;)
         .redirects(1);
       req.end((err, res) =&#x3E; {
-          req.req._headers.host.should.eql(
-            &#x60;localhost:${server2.address().port}&#x60;
-          );
-          res.status.should.eql(200);
-          res.text.should.eql(&#x22;GET&#x22;);
-          done();
-        });
+        req.req._headers.host.should.eql(
+          &#x60;localhost:${server2.address().port}&#x60;
+        );
+        res.status.should.eql(200);
+        res.text.should.eql(&#x22;GET&#x22;);
+        done();
+      });
     }</code></pre></dd>
           </dl>
         </section>
@@ -4060,13 +4063,13 @@ return req;</code></pre></dd>
         .get(&#x60;${base}/test-303&#x60;)
         .redirects(1);
       req.end((err, res) =&#x3E; {
-          req.req._headers.host.should.eql(
-            &#x60;localhost:${server2.address().port}&#x60;
-          );
-          res.status.should.eql(200);
-          res.text.should.eql(&#x22;GET&#x22;);
-          done();
-        });
+        req.req._headers.host.should.eql(
+          &#x60;localhost:${server2.address().port}&#x60;
+        );
+        res.status.should.eql(200);
+        res.text.should.eql(&#x22;GET&#x22;);
+        done();
+      });
     }</code></pre></dd>
           </dl>
         </section>
@@ -4079,13 +4082,13 @@ return req;</code></pre></dd>
         .get(&#x60;${base}/test-307&#x60;)
         .redirects(1);
       req.end((err, res) =&#x3E; {
-          req.req._headers.host.should.eql(
-            &#x60;localhost:${server2.address().port}&#x60;
-          );
-          res.status.should.eql(200);
-          res.text.should.eql(&#x22;GET&#x22;);
-          done();
-        });
+        req.req._headers.host.should.eql(
+          &#x60;localhost:${server2.address().port}&#x60;
+        );
+        res.status.should.eql(200);
+        res.text.should.eql(&#x22;GET&#x22;);
+        done();
+      });
     }</code></pre></dd>
           </dl>
         </section>
@@ -4098,13 +4101,13 @@ return req;</code></pre></dd>
         .get(&#x60;${base}/test-308&#x60;)
         .redirects(1);
       req.end((err, res) =&#x3E; {
-          req.req._headers.host.should.eql(
-            &#x60;localhost:${server2.address().port}&#x60;
-          );
-          res.status.should.eql(200);
-          res.text.should.eql(&#x22;GET&#x22;);
-          done();
-        });
+        req.req._headers.host.should.eql(
+          &#x60;localhost:${server2.address().port}&#x60;
+        );
+        res.status.should.eql(200);
+        res.text.should.eql(&#x22;GET&#x22;);
+        done();
+      });
     }</code></pre></dd>
           </dl>
         </section>
@@ -4122,13 +4125,13 @@ return req;</code></pre></dd>
         .post(&#x60;${base}/test-301&#x60;)
         .redirects(1);
       req.end((err, res) =&#x3E; {
-          req.req._headers.host.should.eql(
-            &#x60;localhost:${server2.address().port}&#x60;
-          );
-          res.status.should.eql(200);
-          res.text.should.eql(&#x22;GET&#x22;);
-          done();
-        });
+        req.req._headers.host.should.eql(
+          &#x60;localhost:${server2.address().port}&#x60;
+        );
+        res.status.should.eql(200);
+        res.text.should.eql(&#x22;GET&#x22;);
+        done();
+      });
     }</code></pre></dd>
           </dl>
         </section>
@@ -4141,13 +4144,13 @@ return req;</code></pre></dd>
         .post(&#x60;${base}/test-302&#x60;)
         .redirects(1);
       req.end((err, res) =&#x3E; {
-          req.req._headers.host.should.eql(
-            &#x60;localhost:${server2.address().port}&#x60;
-          );
-          res.status.should.eql(200);
-          res.text.should.eql(&#x22;GET&#x22;);
-          done();
-        });
+        req.req._headers.host.should.eql(
+          &#x60;localhost:${server2.address().port}&#x60;
+        );
+        res.status.should.eql(200);
+        res.text.should.eql(&#x22;GET&#x22;);
+        done();
+      });
     }</code></pre></dd>
           </dl>
         </section>
@@ -4160,13 +4163,13 @@ return req;</code></pre></dd>
         .post(&#x60;${base}/test-303&#x60;)
         .redirects(1);
       req.end((err, res) =&#x3E; {
-          req.req._headers.host.should.eql(
-            &#x60;localhost:${server2.address().port}&#x60;
-          );
-          res.status.should.eql(200);
-          res.text.should.eql(&#x22;GET&#x22;);
-          done();
-        });
+        req.req._headers.host.should.eql(
+          &#x60;localhost:${server2.address().port}&#x60;
+        );
+        res.status.should.eql(200);
+        res.text.should.eql(&#x22;GET&#x22;);
+        done();
+      });
     }</code></pre></dd>
           </dl>
         </section>
@@ -4179,13 +4182,13 @@ return req;</code></pre></dd>
         .post(&#x60;${base}/test-307&#x60;)
         .redirects(1);
       req.end((err, res) =&#x3E; {
-          req.req._headers.host.should.eql(
-            &#x60;localhost:${server2.address().port}&#x60;
-          );
-          res.status.should.eql(200);
-          res.text.should.eql(&#x22;POST&#x22;);
-          done();
-        });
+        req.req._headers.host.should.eql(
+          &#x60;localhost:${server2.address().port}&#x60;
+        );
+        res.status.should.eql(200);
+        res.text.should.eql(&#x22;POST&#x22;);
+        done();
+      });
     }</code></pre></dd>
           </dl>
         </section>
@@ -4198,13 +4201,13 @@ return req;</code></pre></dd>
         .post(&#x60;${base}/test-308&#x60;)
         .redirects(1);
       req.end((err, res) =&#x3E; {
-          req.req._headers.host.should.eql(
-            &#x60;localhost:${server2.address().port}&#x60;
-          );
-          res.status.should.eql(200);
-          res.text.should.eql(&#x22;POST&#x22;);
-          done();
-        });
+        req.req._headers.host.should.eql(
+          &#x60;localhost:${server2.address().port}&#x60;
+        );
+        res.status.should.eql(200);
+        res.text.should.eql(&#x22;POST&#x22;);
+        done();
+      });
     }</code></pre></dd>
           </dl>
         </section>
@@ -4552,7 +4555,9 @@ return req;</code></pre></dd>
       res.on(&#x22;end&#x22;, () =&#x3E; {
         trackEndEvent++;
         trackEndEvent.should.equal(1);
-        trackCloseEvent.should.equal(0); // close should not have been called
+        if (!process.env.HTTP2_TEST) {
+          trackCloseEvent.should.equal(0); // close should not have been called
+        }
         done();
       });
       res.on(&#x22;close&#x22;, () =&#x3E; {
@@ -4567,6 +4572,46 @@ return req;</code></pre></dd>
       (() =&#x3E; {
         res.destroy();
       }).should.not.throw();
+    });
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>req.serialize(fn)</h1>
+      <dl>
+        <dt>should take precedence over default parsers</dt>
+        <dd><pre><code>done =&#x3E; {
+    request
+      .post(&#x60;${base}/echo&#x60;)
+      .send({foo:123})
+      .serialize(data =&#x3E; &#x27;{&#x22;bar&#x22;:456}&#x27;)
+      .end((err, res) =&#x3E; {
+        assert.ifError(err);
+        assert.equal(&#x27;{&#x22;bar&#x22;:456}&#x27;, res.text);
+        assert.equal(456, res.body.bar);
+        done();
+      });
+  }</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
+      <h1>request.get().set()</h1>
+      <dl>
+        <dt>should set host header after get()</dt>
+        <dd><pre><code>done =&#x3E; {
+    app.get(&#x22;/&#x22;, (req, res) =&#x3E; {
+      req.hostname.should.equal(&#x27;example.com&#x27;);
+      res.end();
+    });
+    server = http.createServer(app);
+    server.listen(0, function listening() {
+      base += &#x60;:${server.address().port}&#x60;;
+      request
+        .get(base)
+        .set(&#x27;host&#x27;, &#x27;example.com&#x27;)
+        .end(() =&#x3E; {
+          done();
+        });
     });
   }</code></pre></dd>
       </dl>

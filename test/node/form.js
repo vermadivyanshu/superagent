@@ -1,6 +1,6 @@
 "use strict";
 
-const request = require("../../");
+const request = require("../support/client");
 const setup = require("../support/setup");
 const base = setup.uri;
 const assert = require("assert");
@@ -10,7 +10,7 @@ describe("Merging objects", () => {
     assert.throws(() => {
       request
         .post("/echo")
-        .send(new Buffer("Change this to Buffer.from in April 2017"))
+        .send(Buffer.from("some buffer"))
         .send({ allowed: false });
     });
   });
