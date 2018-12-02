@@ -985,20 +985,6 @@ assert.throws(() =&#x3E; {
       done();
     });
   }</code></pre></dd>
-        <dt>should work with GET</dt>
-        <dd><pre><code>done =&#x3E; {
-    request
-    .get(&#x60;${uri}/echo&#x60;)
-    .send({ tobi: &#x27;ferret&#x27; })
-    .end((err, res) =&#x3E; {
-      try {
-        res.should.be.json();
-        res.text.should.equal(&#x27;{&#x22;tobi&#x22;:&#x22;ferret&#x22;}&#x27;);
-        ({&#x22;tobi&#x22;:&#x22;ferret&#x22;}).should.eql(res.body);
-        done();
-      } catch(e) {done(e);}
-    });
-  }</code></pre></dd>
         <dt>should work with vendor MIME type</dt>
         <dd><pre><code>done =&#x3E; {
     request
@@ -2616,21 +2602,6 @@ assert(req instanceof OriginalRequest);</code></pre></dd>
     <section class="suite">
       <h1>[node] request</h1>
       <dl>
-        <dt>should send body with .get().send()</dt>
-        <dd><pre><code>next =&#x3E; {
-    request
-      .get(&#x60;${base}/echo&#x60;)
-      .set(&#x22;Content-Type&#x22;, &#x22;text/plain&#x22;)
-      .send(&#x22;wahoo&#x22;)
-      .end((err, res) =&#x3E; {
-        try {
-          assert.equal(&#x22;wahoo&#x22;, res.text);
-          next();
-        } catch (e) {
-          next(e);
-        }
-      });
-  }</code></pre></dd>
         <section class="suite">
           <h1>with an url</h1>
           <dl>
@@ -3276,6 +3247,26 @@ return request
       </dl>
     </section>
     <section class="suite">
+      <h1>request.get().http2()</h1>
+      <dl>
+        <dt>should preserve the encoding of the url</dt>
+        <dd><pre><code>done =&#x3E; {
+    request.get(&#x60;${base}/url?a=(b%29&#x60;).http2().end((err, res) =&#x3E; {
+      assert.equal(&#x22;/url?a=(b%29&#x22;, res.text);
+      done();
+    });
+  }</code></pre></dd>
+        <dt>should format the url</dt>
+        <dd><pre><code>request.get(url.parse(&#x60;${base}/login&#x60;)).http2().then(res =&#x3E; {
+      assert(res.ok);
+    })</code></pre></dd>
+        <dt>should default to http</dt>
+        <dd><pre><code>request.get(&#x22;localhost:5000/login&#x22;).http2().then(res =&#x3E; {
+      assert.equal(res.status, 200);
+    })</code></pre></dd>
+      </dl>
+    </section>
+    <section class="suite">
       <h1>https</h1>
       <dl>
         <section class="suite">
@@ -3296,6 +3287,22 @@ return request
             done();
           });
       }</code></pre></dd>
+                <dt>should reject unauthorized response</dt>
+                <dd><pre><code>return request
+  .get(testEndpoint)
+  .trustLocalhost(false)
+  .then(() =&#x3E; {
+    throw Error(&#x22;Allows MITM&#x22;)
+  }, () =&#x3E; {});</code></pre></dd>
+                <dt>should trust localhost unauthorized response</dt>
+                <dd><pre><code>return request
+  .get(testEndpoint)
+  .trustLocalhost(true)</code></pre></dd>
+                <dt>should trust overriden localhost unauthorized response</dt>
+                <dd><pre><code>return request
+  .get(&#x60;https://example.com:${server.address().port}&#x60;)
+  .connect(&#x22;127.0.0.1&#x22;)
+  .trustLocalhost()</code></pre></dd>
               </dl>
             </section>
             <section class="suite">
@@ -3750,30 +3757,6 @@ return req.then(res =&#x3E; {
       })
       .end();
   }</code></pre></dd>
-        <dt>should not emit error on chunked json</dt>
-        <dd><pre><code>done =&#x3E; {
-    request.get(&#x60;${base}/chunked-json&#x60;).end(err =&#x3E; {
-      assert(!err);
-      done();
-    });
-  }</code></pre></dd>
-        <dt>should not emit error on aborted chunked json</dt>
-        <dd><pre><code>done =&#x3E; {
-    const req = request.get(&#x60;${base}/chunked-json&#x60;);
-    req.end(err =&#x3E; {
-      assert.ifError(err);
-      done();
-    });
-    setTimeout(() =&#x3E; {
-      req.abort();
-    }, 50);
-  }</code></pre></dd>
-        <dt>should not reject promise on aborted chunked json</dt>
-        <dd><pre><code>const req = request.get(&#x60;${base}/chunked-json&#x60;);
-setTimeout(() =&#x3E; {
-  req.abort();
-}, 50);
-return req;</code></pre></dd>
       </dl>
     </section>
     <section class="suite">
@@ -3785,6 +3768,9 @@ return req;</code></pre></dd>
     const redirects = [];
     const req = request.get(base).on(&#x22;redirect&#x22;, res =&#x3E; {
       redirects.push(res.headers.location);
+    })
+    .connect({
+      &#x27;inapplicable&#x27;: &#x27;should be ignored&#x27;,
     });
     stream.on(&#x22;finish&#x22;, () =&#x3E; {
       redirects.should.eql([&#x22;/movies&#x22;, &#x22;/movies/all&#x22;, &#x22;/movies/all/0&#x22;]);
@@ -4287,10 +4273,11 @@ return req;</code></pre></dd>
         })
         .end((err, res) =&#x3E; {
           try {
-            const arr = [];
-            arr.push(&#x22;/movies&#x22;);
-            arr.push(&#x22;/movies/all&#x22;);
-            arr.push(&#x22;/movies/all/0&#x22;);
+            const arr = [
+              &#x22;/movies&#x22;,
+              &#x22;/movies/all&#x22;,
+              &#x22;/movies/all/0&#x22;,
+            ];
             redirects.should.eql(arr);
             res.text.should.equal(&#x22;first movie page&#x22;);
             done();
@@ -4299,24 +4286,38 @@ return req;</code></pre></dd>
           }
         });
     }</code></pre></dd>
+            <dt>should follow Location with IP override</dt>
+            <dd><pre><code>const redirects = [];
+const url = URL.parse(base);
+return request
+  .get(&#x60;http://redir.example.com:${url.port || &#x27;80&#x27;}${url.pathname}&#x60;)
+  .connect({
+    &#x27;*&#x27;: url.hostname,
+  })
+  .on(&#x22;redirect&#x22;, res =&#x3E; {
+    redirects.push(res.headers.location);
+  })
+  .then(res =&#x3E; {
+    const arr = [
+      &#x22;/movies&#x22;,
+      &#x22;/movies/all&#x22;,
+      &#x22;/movies/all/0&#x22;,
+    ];
+    redirects.should.eql(arr);
+    res.text.should.equal(&#x22;first movie page&#x22;);
+  });</code></pre></dd>
             <dt>should not follow on HEAD by default</dt>
-            <dd><pre><code>done =&#x3E; {
-      const redirects = [];
-      request
-        .head(base)
-        .on(&#x22;redirect&#x22;, res =&#x3E; {
-          redirects.push(res.headers.location);
-        })
-        .end((err, res) =&#x3E; {
-          try {
-            redirects.should.eql([]);
-            res.status.should.equal(302);
-            done();
-          } catch (err) {
-            done(err);
-          }
-        });
-    }</code></pre></dd>
+            <dd><pre><code>const redirects = [];
+return request
+  .head(base)
+  .ok(() =&#x3E; true)
+  .on(&#x22;redirect&#x22;, res =&#x3E; {
+    redirects.push(res.headers.location);
+  })
+  .then(res =&#x3E; {
+    redirects.should.eql([]);
+    res.status.should.equal(302);
+  });</code></pre></dd>
             <dt>should follow on HEAD when redirects are set</dt>
             <dd><pre><code>done =&#x3E; {
       const redirects = [];
@@ -4489,55 +4490,32 @@ return req;</code></pre></dd>
           <h1>on POST</h1>
           <dl>
             <dt>should redirect as GET</dt>
-            <dd><pre><code>done =&#x3E; {
-      const redirects = [];
-      request
-        .post(&#x60;${base}/movie&#x60;)
-        .send({ name: &#x22;Tobi&#x22; })
-        .redirects(2)
-        .on(&#x22;redirect&#x22;, res =&#x3E; {
-          redirects.push(res.headers.location);
-        })
-        .end((err, res) =&#x3E; {
-          try {
-            const arr = [];
-            arr.push(&#x22;/movies/all/0&#x22;);
-            redirects.should.eql(arr);
-            res.text.should.equal(&#x22;first movie page&#x22;);
-            done();
-          } catch (err) {
-            done(err);
-          }
-        });
-    }</code></pre></dd>
-          </dl>
-        </section>
-        <section class="suite">
-          <h1>on POST using multipart/form-data</h1>
-          <dl>
-            <dt>should redirect as GET</dt>
-            <dd><pre><code>done =&#x3E; {
-      const redirects = [];
-      request
-        .post(&#x60;${base}/movie&#x60;)
-        .type(&#x22;form&#x22;)
-        .field(&#x22;name&#x22;, &#x22;Tobi&#x22;)
-        .redirects(2)
-        .on(&#x22;redirect&#x22;, res =&#x3E; {
-          redirects.push(res.headers.location);
-        })
-        .end((err, res) =&#x3E; {
-          try {
-            const arr = [];
-            arr.push(&#x22;/movies/all/0&#x22;);
-            redirects.should.eql(arr);
-            res.text.should.equal(&#x22;first movie page&#x22;);
-            done();
-          } catch (err) {
-            done(err);
-          }
-        });
-    }</code></pre></dd>
+            <dd><pre><code>const redirects = [];
+return request
+  .post(&#x60;${base}/movie&#x60;)
+  .send({ name: &#x22;Tobi&#x22; })
+  .redirects(2)
+  .on(&#x22;redirect&#x22;, res =&#x3E; {
+    redirects.push(res.headers.location);
+  })
+  .then(res =&#x3E; {
+    redirects.should.eql([&#x22;/movies/all/0&#x22;]);
+    res.text.should.equal(&#x22;first movie page&#x22;);
+  });</code></pre></dd>
+            <dt>using multipart/form-data should redirect as GET</dt>
+            <dd><pre><code>const redirects = [];
+request
+  .post(&#x60;${base}/movie&#x60;)
+  .type(&#x22;form&#x22;)
+  .field(&#x22;name&#x22;, &#x22;Tobi&#x22;)
+  .redirects(2)
+  .on(&#x22;redirect&#x22;, res =&#x3E; {
+    redirects.push(res.headers.location);
+  })
+  .then(res =&#x3E; {
+    redirects.should.eql([&#x22;/movies/all/0&#x22;]);
+    res.text.should.equal(&#x22;first movie page&#x22;);
+  });</code></pre></dd>
           </dl>
         </section>
       </dl>
@@ -4595,28 +4573,6 @@ return req;</code></pre></dd>
       </dl>
     </section>
     <section class="suite">
-      <h1>request.get().set()</h1>
-      <dl>
-        <dt>should set host header after get()</dt>
-        <dd><pre><code>done =&#x3E; {
-    app.get(&#x22;/&#x22;, (req, res) =&#x3E; {
-      req.hostname.should.equal(&#x27;example.com&#x27;);
-      res.end();
-    });
-    server = http.createServer(app);
-    server.listen(0, function listening() {
-      base += &#x60;:${server.address().port}&#x60;;
-      request
-        .get(base)
-        .set(&#x27;host&#x27;, &#x27;example.com&#x27;)
-        .end(() =&#x3E; {
-          done();
-        });
-    });
-  }</code></pre></dd>
-      </dl>
-    </section>
-    <section class="suite">
       <h1>res.toError()</h1>
       <dl>
         <dt>should return an Error</dt>
@@ -4669,8 +4625,9 @@ return req;</code></pre></dd>
             <dd><pre><code>done =&#x3E; {
       request
         .get(&#x60;${base}/&#x60;)
-        .ca(cert)
+        .ca(cacert)
         .end((err, res) =&#x3E; {
+          assert.ifError(err);
           assert(res.ok);
           assert.strictEqual(&#x22;root ok!&#x22;, res.text);
           done();
@@ -4680,8 +4637,9 @@ return req;</code></pre></dd>
             <dd><pre><code>done =&#x3E; {
       request
         .get(&#x60;${base}/request/path&#x60;)
-        .ca(cert)
+        .ca(cacert)
         .end((err, res) =&#x3E; {
+          assert.ifError(err);
           assert(res.ok);
           assert.strictEqual(&#x22;request path ok!&#x22;, res.text);
           done();

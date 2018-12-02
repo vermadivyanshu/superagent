@@ -1,6 +1,6 @@
 "use strict";
 const request = require("../support/client");
-const express = require("express");
+const express = require("../support/express");
 const assert = require("assert");
 const app = express();
 let http = require("http");
@@ -9,6 +9,7 @@ const os = require("os");
 const fs = require("fs");
 const key = fs.readFileSync(`${__dirname}/fixtures/key.pem`);
 const cert = fs.readFileSync(`${__dirname}/fixtures/cert.pem`);
+const cacert = fs.readFileSync(`${__dirname}/fixtures/ca.cert.pem`);
 const httpSockPath = [os.tmpdir(), "superagent-http.sock"].join("/");
 const httpsSockPath = [os.tmpdir(), "superagent-https.sock"].join("/");
 let httpServer;
@@ -92,8 +93,9 @@ describe("[unix-sockets] https", () => {
     it("path: / (root)", done => {
       request
         .get(`${base}/`)
-        .ca(cert)
+        .ca(cacert)
         .end((err, res) => {
+          assert.ifError(err);
           assert(res.ok);
           assert.strictEqual("root ok!", res.text);
           done();
@@ -103,8 +105,9 @@ describe("[unix-sockets] https", () => {
     it("path: /request/path", done => {
       request
         .get(`${base}/request/path`)
-        .ca(cert)
+        .ca(cacert)
         .end((err, res) => {
+          assert.ifError(err);
           assert(res.ok);
           assert.strictEqual("request path ok!", res.text);
           done();

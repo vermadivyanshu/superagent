@@ -2,6 +2,7 @@
 const setup = require("../support/setup");
 const base = setup.uri;
 
+const URL = require("url");
 const assert = require("assert");
 const request = require("../support/client");
 
@@ -76,10 +77,11 @@ describe("request", () => {
         })
         .end((err, res) => {
           try {
-            const arr = [];
-            arr.push("/movies");
-            arr.push("/movies/all");
-            arr.push("/movies/all/0");
+            const arr = [
+              "/movies",
+              "/movies/all",
+              "/movies/all/0",
+            ];
             redirects.should.eql(arr);
             res.text.should.equal("first movie page");
             done();
@@ -89,22 +91,40 @@ describe("request", () => {
         });
     });
 
-    it("should not follow on HEAD by default", done => {
+    it("should follow Location with IP override", () => {
       const redirects = [];
-
-      request
-        .head(base)
+      const url = URL.parse(base);
+      return request
+        .get(`http://redir.example.com:${url.port || '80'}${url.pathname}`)
+        .connect({
+          '*': url.hostname,
+        })
         .on("redirect", res => {
           redirects.push(res.headers.location);
         })
-        .end((err, res) => {
-          try {
-            redirects.should.eql([]);
-            res.status.should.equal(302);
-            done();
-          } catch (err) {
-            done(err);
-          }
+        .then(res => {
+          const arr = [
+            "/movies",
+            "/movies/all",
+            "/movies/all/0",
+          ];
+          redirects.should.eql(arr);
+          res.text.should.equal("first movie page");
+        });
+    });
+
+    it("should not follow on HEAD by default", () => {
+      const redirects = [];
+
+      return request
+        .head(base)
+        .ok(() => true)
+        .on("redirect", res => {
+          redirects.push(res.headers.location);
+        })
+        .then(res => {
+          redirects.should.eql([]);
+          res.status.should.equal(302);
         });
     });
 
@@ -276,32 +296,23 @@ describe("request", () => {
   });
 
   describe("on POST", () => {
-    it("should redirect as GET", done => {
+    it("should redirect as GET", () => {
       const redirects = [];
 
-      request
+      return request
         .post(`${base}/movie`)
         .send({ name: "Tobi" })
         .redirects(2)
         .on("redirect", res => {
           redirects.push(res.headers.location);
         })
-        .end((err, res) => {
-          try {
-            const arr = [];
-            arr.push("/movies/all/0");
-            redirects.should.eql(arr);
-            res.text.should.equal("first movie page");
-            done();
-          } catch (err) {
-            done(err);
-          }
+        .then(res => {
+          redirects.should.eql(["/movies/all/0"]);
+          res.text.should.equal("first movie page");
         });
     });
-  });
 
-  describe("on POST using multipart/form-data", () => {
-    it("should redirect as GET", done => {
+    it("using multipart/form-data should redirect as GET", () => {
       const redirects = [];
 
       request
@@ -312,16 +323,9 @@ describe("request", () => {
         .on("redirect", res => {
           redirects.push(res.headers.location);
         })
-        .end((err, res) => {
-          try {
-            const arr = [];
-            arr.push("/movies/all/0");
-            redirects.should.eql(arr);
-            res.text.should.equal("first movie page");
-            done();
-          } catch (err) {
-            done(err);
-          }
+        .then(res => {
+          redirects.should.eql(["/movies/all/0"]);
+          res.text.should.equal("first movie page");
         });
     });
   });

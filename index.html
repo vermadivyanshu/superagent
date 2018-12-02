@@ -39,13 +39,15 @@
    .then(res =&gt; {
 
    });</code></pre><p>The <strong>Node</strong> client supports making requests to <a href="https://en.wikipedia.org/wiki/Unix_domain_socket">Unix Domain Sockets</a>:</p>
-<pre><code> // pattern: https?+unix://SOCKET_PATH/REQUEST_PATH
- //          Use `%2F` as `/` in SOCKET_PATH
- request
-   .get(&#39;http+unix://%2Fabsolute%2Fpath%2Fto%2Funix.sock/search&#39;)
-   .then(res =&gt; {
-
-   });</code></pre><p><strong>DELETE</strong>, <strong>HEAD</strong>, <strong>PATCH</strong>, <strong>POST</strong>, and <strong>PUT</strong> requests can also be used, simply change the method name:</p>
+<pre><code>// pattern: https?+unix://SOCKET_PATH/REQUEST_PATH
+//          Use `%2F` as `/` in SOCKET_PATH
+try {
+  const res = await request
+    .get(&#39;http+unix://%2Fabsolute%2Fpath%2Fto%2Funix.sock/search&#39;);
+  // res.body, res.headers, res.status
+} catch(err) {
+  // err.message, err.response
+}</code></pre><p><strong>DELETE</strong>, <strong>HEAD</strong>, <strong>PATCH</strong>, <strong>POST</strong>, and <strong>PUT</strong> requests can also be used, simply change the method name:</p>
 <pre><code>request
   .head(&#39;/favicon.ico&#39;)
   .then(res =&gt; {
@@ -54,12 +56,7 @@
 <p>The HTTP method defaults to <strong>GET</strong>, so if you wish, the following is valid:</p>
 <pre><code> request(&#39;/search&#39;, (err, res) =&gt; {
 
- });</code></pre><h2 id="using-http-2">Using HTTP/2</h2>
-<p>To make a request using HTTP/2 protocol only (with no HTTP/1.x fallback), use the <code>.http2()</code> method. Currently we do not have auto-detection of HTTP/2-capable servers. This feature is experimental.</p>
-<pre><code>const request = require(&#39;superagent&#39;);
-const res = await request
-  .get(&#39;https://example.com/h2&#39;)
-  .http2();</code></pre><h2 id="setting-header-fields">Setting header fields</h2>
+ });</code></pre><h2 id="setting-header-fields">Setting header fields</h2>
 <p>Setting header fields is simple, invoke <code>.set()</code> with a field name and value:</p>
 <pre><code> request
    .get(&#39;/search&#39;)
@@ -98,7 +95,7 @@ const res = await request
     .then(res =&gt; {
 
     });</code></pre><h2 id="head-requests"><code>HEAD</code> requests</h2>
-<p>You can also use the <code>.query()</code> method for HEAD requests. The following will produce the path <a href="mailto:%60/users?email=joe@smith.com">`/users?email=joe@smith.com</a>`.</p>
+<p>You can also use the <code>.query()</code> method for HEAD requests. The following will produce the path <code>/users?email=joe@smith.com</code>.</p>
 <pre><code>  request
     .head(&#39;/users&#39;)
     .query({ email: &#39;joe@smith.com&#39; })
@@ -109,27 +106,28 @@ const res = await request
 <pre><code>  request.post(&#39;/user&#39;)
     .set(&#39;Content-Type&#39;, &#39;application/json&#39;)
     .send(&#39;{&quot;name&quot;:&quot;tj&quot;,&quot;pet&quot;:&quot;tobi&quot;}&#39;)
-    .then(callback)</code></pre><p>Since JSON is undoubtedly the most common, it&#39;s the <em>default</em>! The following example is equivalent to the previous.</p>
+    .then(callback)
+    .catch(errorCallback)</code></pre><p>Since JSON is undoubtedly the most common, it&#39;s the _default_! The following example is equivalent to the previous.</p>
 <pre><code>  request.post(&#39;/user&#39;)
     .send({ name: &#39;tj&#39;, pet: &#39;tobi&#39; })
-    .then(callback)</code></pre><p>Or using multiple <code>.send()</code> calls:</p>
+    .then(callback, errorCallback)</code></pre><p>Or using multiple <code>.send()</code> calls:</p>
 <pre><code>  request.post(&#39;/user&#39;)
     .send({ name: &#39;tj&#39; })
     .send({ pet: &#39;tobi&#39; })
-    .then(callback)</code></pre><p>By default sending strings will set the <code>Content-Type</code> to <code>application/x-www-form-urlencoded</code>,
+    .then(callback, errorCallback)</code></pre><p>By default sending strings will set the <code>Content-Type</code> to <code>application/x-www-form-urlencoded</code>,
   multiple calls will be concatenated with <code>&amp;</code>, here resulting in <code>name=tj&amp;pet=tobi</code>:</p>
 <pre><code>  request.post(&#39;/user&#39;)
     .send(&#39;name=tj&#39;)
     .send(&#39;pet=tobi&#39;)
-    .then(callback);</code></pre><p>SuperAgent formats are extensible, however by default &quot;json&quot; and &quot;form&quot; are supported. To send the data as <code>application/x-www-form-urlencoded</code> simply invoke <code>.type()</code> with &quot;form&quot;, where the default is &quot;json&quot;. This request will <strong>POST</strong> the body &quot;name=tj&amp;pet=tobi&quot;.</p>
+    .then(callback, errorCallback);</code></pre><p>SuperAgent formats are extensible, however by default &quot;json&quot; and &quot;form&quot; are supported. To send the data as <code>application/x-www-form-urlencoded</code> simply invoke <code>.type()</code> with &quot;form&quot;, where the default is &quot;json&quot;. This request will <strong>POST</strong> the body &quot;name=tj&amp;pet=tobi&quot;.</p>
 <pre><code>  request.post(&#39;/user&#39;)
     .type(&#39;form&#39;)
     .send({ name: &#39;tj&#39; })
     .send({ pet: &#39;tobi&#39; })
-    .then(callback)</code></pre><p>Sending a <a href="https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData"><code>FormData</code></a> object is also supported. The following example will <strong>POST</strong> the content of the HTML form identified by id=&quot;myForm&quot;:</p>
+    .then(callback, errorCallback)</code></pre><p>Sending a <a href="https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData"><code>FormData</code></a> object is also supported. The following example will <strong>POST</strong> the content of the HTML form identified by id=&quot;myForm&quot;:</p>
 <pre><code>  request.post(&#39;/user&#39;)
     .send(new FormData(document.getElementById(&#39;myForm&#39;)))
-    .then(callback)</code></pre><h2 id="setting-the-content-type">Setting the <code>Content-Type</code></h2>
+    .then(callback, errorCallback)</code></pre><h2 id="setting-the-content-type">Setting the <code>Content-Type</code></h2>
 <p>The obvious solution is to use the <code>.set()</code> method:</p>
 <pre><code> request.post(&#39;/user&#39;)
    .set(&#39;Content-Type&#39;, &#39;application/json&#39;)</code></pre><p>As a short-hand the <code>.type()</code> method is also available, accepting
@@ -166,7 +164,8 @@ the built-in serialization with the <code>.serialize()</code> method on a per-re
    .get(&#39;https://example.com/search&#39;)
    .retry(2) // or:
    .retry(2, callback)
-   .then(finished);</code></pre><p>Use <code>.retry()</code> only with requests that are <em>idempotent</em> (i.e. multiple requests reaching the server won&#39;t cause undesirable side effects like duplicate purchases).</p>
+   .then(finished);
+   .catch(failed);</code></pre><p>Use <code>.retry()</code> only with requests that are <em>idempotent</em> (i.e. multiple requests reaching the server won&#39;t cause undesirable side effects like duplicate purchases).</p>
 <h2 id="setting-accept">Setting Accept</h2>
 <p>In a similar fashion to the <code>.type()</code> method it is also possible to set the <code>Accept</code> header via the short hand method <code>.accept()</code>. Which references <code>request.types</code> as well allowing you to specify either the full canonicalized MIME type name as <code>type/subtype</code>, or the extension suffix form as &quot;xml&quot;, &quot;json&quot;, &quot;png&quot;, etc. for convenience:</p>
 <pre><code> request.get(&#39;/user&#39;)
@@ -333,10 +332,8 @@ Tobi
 <pre><code>request.get(&#39;http://tobi:learnboost@local&#39;).then(callback);</code></pre><p>By default only <code>Basic</code> auth is used. In browser you can add <code>{type:&#39;auto&#39;}</code> to enable all methods built-in in the browser (Digest, NTLM, etc.):</p>
 <pre><code>request.auth(&#39;digest&#39;, &#39;secret&#39;, {type:&#39;auto&#39;})</code></pre><h2 id="following-redirects">Following redirects</h2>
 <p>By default up to 5 redirects will be followed, however you may specify this with the <code>res.redirects(n)</code> method:</p>
-<pre><code>request
-  .get(&#39;/some.png&#39;)
-  .redirects(2)
-  .then(callback);</code></pre><h2 id="agents-for-global-state">Agents for global state</h2>
+<pre><code>const response = await request.get(&#39;/some.png&#39;).redirects(2);</code></pre><p>Redirects exceeding the limit are treated as errors. Use <code>.ok(res =&gt; res.status &lt; 400)</code> to read them as successful responses.</p>
+<h2 id="agents-for-global-state">Agents for global state</h2>
 <h3 id="saving-cookies">Saving cookies</h3>
 <p>In Node SuperAgent does not save cookies by default, but you can use the <code>.agent()</code> method to create a copy of SuperAgent that saves cookies. Each copy has a separate cookie jar.</p>
 <pre><code>const agent = request.agent();
@@ -457,9 +454,23 @@ else if (err) {
       loaded: // bytes downloaded or uploaded so far
     } */
   })
-  .then()</code></pre><h2 id="promise-and-generator-support">Promise and Generator support</h2>
-<p>SuperAgent&#39;s request is a &quot;thenable&quot; object that&#39;s compatible with JavaScript promises and <code>async</code>/<code>await</code> syntax.</p>
-<p>If you&#39;re using promises, <strong>do not</strong> call <code>.end()</code> or <code>.pipe()</code>. Any use of <code>.then()</code> or <code>await</code> disables all other ways of using the request.</p>
+  .then()</code></pre><h2 id="testing-on-localhost">Testing on localhost</h2>
+<h3 id="forcing-specific-connection-ip-address">Forcing specific connection IP address</h3>
+<p>In Node.js it&#39;s possible to ignore DNS resolution and direct all requests to a specific IP address using <code>.connect()</code> method. For example, this request will go to localhost instead of <code>example.com</code>:</p>
+<pre><code>const res = await request.get(&quot;http://example.com&quot;).connect(&quot;127.0.0.1&quot;);</code></pre><p>Because the request may be redirected, it&#39;s possible to specify multiple hostnames and multiple IPs, as well as a special <code>*</code> as the fallback (note: other wildcards are not supported). The requests will keep their <code>Host</code> header with the original value. <code>.connect(undefined)</code> turns off the feature.</p>
+<pre><code>const res = await request.get(&quot;http://redir.example.com:555&quot;)
+  .connect({
+    &quot;redir.example.com&quot;: &quot;127.0.0.1&quot;, // redir.example.com:555 will use 127.0.0.1:555
+    &quot;www.example.com&quot;: false, // don&#39;t override this one; use DNS as normal
+    &quot;*&quot;: &quot;proxy.example.com&quot;, // all other requests will go to this host
+  });</code></pre><h3 id="ignoring-broken-insecure-https-on-localhost">Ignoring broken/insecure HTTPS on localhost</h3>
+<p>In Node.js, when HTTPS is misconfigured and insecure (e.g. using self-signed certificate <em>without</em> specifying own <code>.ca()</code>), it&#39;s still possible to permit requests to <code>localhost</code> by calling <code>.trustLocalhost()</code>:</p>
+<pre><code>const res = await request.get(&quot;https://localhost&quot;).trustLocalhost()</code></pre><p>Together with <code>.connect(&quot;127.0.0.1&quot;)</code> this may be used to force HTTPS requests to any domain to be re-routed to <code>localhost</code> instead.</p>
+<p>It&#39;s generally safe to ignore broken HTTPS on <code>localhost</code>, because the loopback interface is not exposed to untrusted networks. Trusting <code>localhost</code> may become the default in the future. Use <code>.trustLocalhost(false)</code> to force check of <code>127.0.0.1</code>&#39;s authenticity.</p>
+<p>We intentionally don&#39;t support disabling of HTTPS security when making requests to any other IP, because such options end up abused as a quick &quot;fix&quot; for HTTPS problems. You can get free HTTPS certificates from <a href="https://certbot.eff.org">Let&#39;s Encrypt</a> or set your own CA (<code>.ca(ca_public_pem)</code>) to make your self-signed certificates trusted.</p>
+<h2 id="promise-and-generator-support">Promise and Generator support</h2>
+<p>SuperAgent&#39;s request is a &quot;thenable&quot; object that&#39;s compatible with JavaScript promises and the <code>async</code>/<code>await</code> syntax.</p>
+<pre><code>const res = await request.get(url);</code></pre><p>If you&#39;re using promises, <strong>do not</strong> call <code>.end()</code> or <code>.pipe()</code>. Any use of <code>.then()</code> or <code>await</code> disables all other ways of using the request.</p>
 <p>Libraries like <a href="https://github.com/tj/co">co</a> or a web framework like <a href="https://github.com/koajs/koa">koa</a> can <code>yield</code> on any SuperAgent method:</p>
 <pre><code>const req = request
   .get(&#39;http://local&#39;)
